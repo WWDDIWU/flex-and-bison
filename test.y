@@ -43,12 +43,14 @@ intodervar          : INT
 rest                : list
                     | element
 
-entry               : function CD rulelist
-                    | rule
+entry               : functionselect DOT LF entry
                     | // epsilon
 
+functionselect      : function CD rulelist DOT LF entry
+                    | function DOT LF entry
+
 rulelist            : statement COMMA rulelist
-                    | statement DOT LF entry
+                    | statement
 
 statement           : math
                     | function
@@ -67,8 +69,6 @@ mathsym             : GTE
                     | MINUS
                     | MULTIPLY
                     | DIVIDE
-
-rule                :function DOT LF entry
 
 function            : LABEL OPA args CPA
 
