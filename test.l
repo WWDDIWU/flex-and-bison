@@ -7,7 +7,7 @@ var [_A-Z][A-Za-z0-9]*
 label [a-z]+
 
 %%
-is {return IS;}
+" is " {return IS;}
 {var} {return VAR;}
 {label} {
     yylval.string_val = strdup(yytext);
@@ -26,7 +26,7 @@ is {return IS;}
 \) {return CPA;}
 , {return COMMA;}
 \>= {return GTE;}
-\<= {return LTE;}
+\=< {return LTE;}
 -> {return IF;}
 \< {return LT;}
 \> {return GT;}
@@ -37,4 +37,5 @@ is {return IS;}
 \* {return MULTIPLY;}
 \/ {return DIVIDE;}
 \n {return LF;}
+" "+ {;}
 . {return WWDDIWU;}

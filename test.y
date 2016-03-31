@@ -24,35 +24,50 @@
 
 %%
 
+list: OBR innerlist CBR
+
+innerlist: element PIPE rest
+        | element
+
+element: intodervar | intodervar COMMA endingelement |
+
+endingelement: intodervar | intodervar COMMA endingelement
+
+intodervar: INT | VAR | OPA INT CPA
+
+rest: list | element
+
 entry: function CD rulelist
     | rule
+    |
 
-rulelist: function COMMA rulelist
-        | math COMMA rulelist
-        | function DOT LF
-        | math DOT LF
+rulelist: statement COMMA rulelist
+        | statement DOT LF entry
+
+statement: math
+        | function
+        | isstatement
 
 math: math mathsym math
-    | VAR
-    | INT
+    | intodervar
 
-isStatement: VAR IS math
+isstatement: VAR IS math
 
-mathsym: GTE | LTE | LT | GT | PLUS | MINUS | MULTIPLY | DIVIDE
+mathsym: GTE
+    | LTE
+    | LT
+    | GT
+    | PLUS
+    | MINUS
+    | MULTIPLY
+    | DIVIDE
 
-rule: function DOT LF
+rule: function DOT LF entry
 
 function: LABEL OPA args CPA
 
-list: OBR ls CBR
-
-ls: le | le COMMA le
-
-le: VAR | list |
-
 args: args COMMA args
-    | VAR
-    | INT
+    | intodervar
     | LABEL
     | list
 
