@@ -15,47 +15,46 @@
     char *string_val;
 }
 
-%start line
+%start entry
 
-%token <string_val> LABEL
+%left PLUS MINUS MULTIPLY DIVIDE GTE LTE LT GT
 %token <int_val> INT
-%type <string_val> hornclause
-%type <string_val> args
-%token VAR
-%token FLOAT
-%token OBR
-%token CBR
-%token IS
-%token DOT
-%token CD
-%token SEMICOLON
-%token OPA
-%token CPA
-%token COMMA
-%token GTE
-%token LTE
-%token IF
-%token LT
-%token GT
-%token EQ
-%token PIPE
-%token PLUS
-%token MINUS
-%token MULTIPLY
-%token DIVIDE
-%token LF
-%token WWDDIWU
+%token <string_val> LABEL
+%token OPA CPA COMMA IF EQ PIPE LF WWDDIWU VAR OBR CBR IS DOT CD SEMICOLON
 
 %%
 
-line: LF | hornclause LF line {printf("%s", $1);};
+entry: function CD rulelist
+    | rule
 
-hornclause: LABEL OPA args CPA DOT {printf("%s", $3);};
+rulelist: function COMMA rulelist
+        | math COMMA rulelist
+        | function DOT LF
+        | math DOT LF
 
-args: LABEL {$$ = $1}
-    | INT {$$ = $1}
-    | FLOAT {$$ = $1}
-    | args COMMA args {$$ = $1}
+math: math mathsym math
+    | VAR
+    | INT
+
+isStatement: VAR IS math
+
+mathsym: GTE | LTE | LT | GT | PLUS | MINUS | MULTIPLY | DIVIDE
+
+rule: function DOT LF
+
+function: LABEL OPA args CPA
+
+list: OBR ls CBR
+
+ls: le | le COMMA le
+
+le: VAR | list |
+
+args: args COMMA args
+    | VAR
+    | INT
+    | LABEL
+    | list
 
 %%
 

@@ -3,7 +3,7 @@
 %}
 
 digit [0-9]
-var (_|A-Z)[A-Za-z0-9]+
+var [_A-Z][A-Za-z0-9]*
 label [a-z]+
 
 %%
@@ -13,7 +13,6 @@ is {return IS;}
     yylval.string_val = strdup(yytext);
     return LABEL;
 }
--?{digit}+\.{digit}+ {return FLOAT;}
 -?{digit}+ {
     yylval.int_val = atoi(yytext);
     return INT;
