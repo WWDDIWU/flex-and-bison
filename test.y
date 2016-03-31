@@ -24,52 +24,58 @@
 
 %%
 
-list: OBR innerlist CBR
+list                : OBR innerlist CBR
 
-innerlist: element PIPE rest
-        | element
+innerlist           : element PIPE rest
+                    | element
 
-element: intodervar | intodervar COMMA endingelement |
+element             : intodervar
+                    | intodervar COMMA endingelement
+                    | // epsilon
 
-endingelement: intodervar | intodervar COMMA endingelement
+endingelement       : intodervar
+                    | intodervar COMMA endingelement
 
-intodervar: INT | VAR | OPA INT CPA
+intodervar          : INT
+                    | VAR
+                    | OPA INT CPA
 
-rest: list | element
+rest                : list
+                    | element
 
-entry: function CD rulelist
-    | rule
-    |
+entry               : function CD rulelist
+                    | rule
+                    | // epsilon
 
-rulelist: statement COMMA rulelist
-        | statement DOT LF entry
+rulelist            : statement COMMA rulelist
+                    | statement DOT LF entry
 
-statement: math
-        | function
-        | isstatement
+statement           : math
+                    | function
+                    | isstatement
 
-math: math mathsym math
-    | intodervar
+math                : math mathsym math
+                    | intodervar
 
-isstatement: VAR IS math
+isstatement         : VAR IS math
 
-mathsym: GTE
-    | LTE
-    | LT
-    | GT
-    | PLUS
-    | MINUS
-    | MULTIPLY
-    | DIVIDE
+mathsym             : GTE
+                    | LTE
+                    | LT
+                    | GT
+                    | PLUS
+                    | MINUS
+                    | MULTIPLY
+                    | DIVIDE
 
-rule: function DOT LF entry
+rule                :function DOT LF entry
 
-function: LABEL OPA args CPA
+function            : LABEL OPA args CPA
 
-args: args COMMA args
-    | intodervar
-    | LABEL
-    | list
+args                : args COMMA args
+                    | intodervar
+                    | LABEL
+                    | list
 
 %%
 
