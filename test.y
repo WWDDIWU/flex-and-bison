@@ -3,11 +3,38 @@
     #include <stdlib.h>
     #include <string.h>
 
+    #define PROBLEM 0
+    #define SUBPROBLEM 1
+
     int yyerror(char *s);
     int yylex(void);
 
+    void init_structs(void);
+    void addProblem(char *name);
+    void addVariable(char *name, int hilf);
+
+    struct variable_node {
+        char name[64];
+        int pos;
+        int hilfvariable;
+        struct variable_node *next;
+    };
+
+    struct literal_node {
+        char name[64];
+        char expression[512];
+        int type;
+        struct literal_node *next;
+        struct variable_node *first_var;
+        struct variable_node *current_variable;
+    };
+
+
     int lineno = 0;
     int sum = 0;
+
+    struct literal_node *start_node;
+    struct literal_node *current_node;
 %}
 
 %union {
@@ -15,51 +42,54 @@
     char *string_val;
 }
 
+%expect 11
+
 %start entry
 
 %left PLUS MINUS MULTIPLY DIVIDE GTE LTE LT GT
-%token <int_val> INT
-%token <string_val> LABEL
-%token OPA CPA COMMA IF EQ PIPE LF WWDDIWU VAR OBR CBR IS DOT CD SEMICOLON
+%token <string_val> LABEL INT VAR
+%type <string_val> entry function functionselect isstatement intodervar innerlist element listodervar list
+%token OPA CPA COMMA IF EQ PIPE LF WWDDIWU OBR CBR DOT CD SEMICOLON slash
 
 %%
 
-list                : OBR innerlist CBR
+list                : OBR innerlist CBR {$$ = ""}
 
-innerlist           : element PIPE rest
+innerlist           : element PIPE listodervar
                     | element
 
-element             : intodervar
-                    | intodervar COMMA endingelement
-                    | // epsilon
+element             : listodervar
+                    | listodervar COMMA endingelement
+                    | {$$ = ""}// epsilon
 
-endingelement       : intodervar
-                    | intodervar COMMA endingelement
+endingelement       : listodervar
+                    | listodervar COMMA endingelement
 
-intodervar          : INT
-                    | VAR
-                    | OPA INT CPA
+listodervar         : intodervar {addVariable($1,1);}
+                    | list
 
-rest                : list
-                    | element
+intodervar          : INT {$$ = $1}
+                    | VAR {$$ = $1}
+                    | OPA INT CPA {$$ = $2}
+
 
 entry               : functionselect DOT LF entry
-                    | // epsilon
+                    | slash {$$= "";}// epsilon
 
-functionselect      : function CD rulelist DOT LF entry
-                    | function DOT LF entry
+functionselect      : function CD rulelist {$$ = $1;}
+                    | function {$$ = $1;}
 
 rulelist            : statement COMMA rulelist
                     | statement
 
-statement           : math
+statement           : {addProblem("math");} math
                     | function
                     | isstatement
 
 math                : math mathsym math
-                    | intodervar
+                    | intodervar {addVariable($1,1);}
 
-isstatement         : VAR IS math
+isstatement         : VAR {addProblem("is"); addVariable($1,1);} IS math
 
 mathsym             : GTE
                     | LTE
@@ -70,17 +100,16 @@ mathsym             : GTE
                     | MULTIPLY
                     | DIVIDE
 
-function            : LABEL OPA args CPA
+function            : LABEL {addProblem($1);} OPA args CPA
 
 args                : args COMMA args
-                    | intodervar
-                    | LABEL
+                    | intodervar {addVariable($1, 1);}
+                    | LABEL {printf("args: %s\n", $1)}
                     | list
 
 %%
 
-int yyerror(char *s)
-{
+int yyerror(char *s) {
   extern int yylineno;	// defined and maintained in lex.c
   extern char *yytext;	// defined and maintained in lex.c
 
@@ -89,6 +118,57 @@ int yyerror(char *s)
 }
 
 int main() {
+
+    init_structs();
+
     yyparse();
     return 0;
+}
+
+void init_structs() {
+    start_node = (struct literal_node *)(malloc(sizeof(struct literal_node)));
+    current_node = (struct literal_node *)(malloc(sizeof(struct literal_node)));
+    current_node->type = -1;
+}
+
+void addProblem(char *name) {
+    struct literal_node *temp_node = (struct literal_node *)(malloc(sizeof(struct literal_node)));
+
+    // initialize node
+    strncpy(temp_node->name, name, 64);
+
+    temp_node->first_var = NULL;
+
+    if(current_node->type == -1) {
+        temp_node->type = PROBLEM;
+
+        start_node = temp_node;
+        start_node->next = NULL;
+
+        current_node = start_node;
+    } else {
+        temp_node->type = SUBPROBLEM;
+
+        current_node->next = temp_node;
+        current_node = temp_node;
+    }
+
+    printf("New problem: %s\n",name);
+}
+
+void addVariable(char *name, int hilf) {
+    struct variable_node *temp_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+
+    strncpy(temp_node->name, name, 64);
+    temp_node->hilfvariable = hilf;
+
+    printf("New variable: %s, Last Variable of Current Node: %s\n", temp_node->name, current_node->current_variable->name);
+
+    if (current_node->first_var == NULL) {
+        current_node->first_var = temp_node;
+        current_node->current_variable = temp_node;
+    } else {
+        current_node->current_variable->next = temp_node;
+        current_node->current_variable = temp_node;
+    }
 }

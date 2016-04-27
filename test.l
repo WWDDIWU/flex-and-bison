@@ -8,13 +8,16 @@ label [a-z]+
 
 %%
 " is " {return IS;}
-{var} {return VAR;}
+{var} {
+    yylval.string_val = strdup(yytext);
+    return VAR;
+}
 {label} {
     yylval.string_val = strdup(yytext);
     return LABEL;
 }
 -?{digit}+ {
-    yylval.int_val = atoi(yytext);
+    yylval.string_val = strdup(yytext);
     return INT;
 }
 \[ {return OBR;}
@@ -38,4 +41,5 @@ label [a-z]+
 \/ {return DIVIDE;}
 \n {return LF;}
 " "+ {;}
+"~\n" {return slash;}
 . {return WWDDIWU;}
