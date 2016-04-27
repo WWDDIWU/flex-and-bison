@@ -42,13 +42,11 @@
     char *string_val;
 }
 
-%expect 11
-
 %start entry
 
-%left PLUS MINUS MULTIPLY DIVIDE GTE LTE LT GT
+%left PLUS MINUS MULTIPLY DIVIDE GTE LTE LT GT IS
 %token <string_val> LABEL INT VAR
-%type <string_val> entry function functionselect isstatement intodervar innerlist element listodervar list
+%type <string_val> entry function functionselect intodervar innerlist element listodervar list
 %token OPA CPA COMMA IF EQ PIPE LF WWDDIWU OBR CBR DOT CD SEMICOLON slash
 
 %%
@@ -84,12 +82,11 @@ rulelist            : statement COMMA rulelist
 
 statement           : {addProblem("math");} math
                     | function
-                    | isstatement
+                    | VAR {addProblem("math"); addVariable($1,1);} mathsym math
+                    | VAR IS {addProblem("is"); addVariable($1,1);} statement
 
 math                : math mathsym math
                     | intodervar {addVariable($1,1);}
-
-isstatement         : VAR {addProblem("is"); addVariable($1,1);} IS math
 
 mathsym             : GTE
                     | LTE

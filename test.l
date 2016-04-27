@@ -7,7 +7,6 @@ var [_A-Z][A-Za-z0-9]*
 label [a-z]+
 
 %%
-" is " {return IS;}
 {var} {
     yylval.string_val = strdup(yytext);
     return VAR;
@@ -20,6 +19,7 @@ label [a-z]+
     yylval.string_val = strdup(yytext);
     return INT;
 }
+" is " {return IS;}
 \[ {return OBR;}
 \] {return CBR;}
 \. {return DOT;}
