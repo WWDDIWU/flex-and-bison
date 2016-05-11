@@ -205,7 +205,7 @@ int isGU(char **mp, int mplen, char **nhp, int nhplen, char **mq, int mqlen, cha
     }
 }
 
-struct variable_node *getIntersection(struct node *left, struct node *right) {
+struct variable_node *getIntersection(struct variable_node *left, struct variable_node *right) {
 
     struct variable_node *start_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
     struct variable_node *current_node = start_node;
@@ -227,7 +227,7 @@ struct variable_node *getIntersection(struct node *left, struct node *right) {
 
 }
 
-struct variable_node *getUnion(struct node *left, struct node *right) {
+struct variable_node *getUnion(struct variable_node *left, struct variable_node *right) {
     struct variable_node *start_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
     struct variable_node *current_node = start_node;
     strncpy(start_node->name, "", 1);
@@ -247,7 +247,22 @@ struct variable_node *getUnion(struct node *left, struct node *right) {
     return start_node;
 }
 
+struct variable_node *getRelativeComplement(struct variable_node *in, struct variable_node *of) {
+    struct variable_node *start_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+    struct variable_node *current_node = start_node;
 
+    while(in != null) {
+        while(of != null) {
+            if(strcmp(in->name, of->name) != 0) {
+                current_node->name = in->name;
+                current_node->next = (struct variable_node *)(malloc(sizeofo(struct variable_node)));
+                current_node = current_node->next;
+            }
+            of = of->next;
+        }
+        in = in->next;
+    }
+}
 
 void createTable() {
     // Create E node
