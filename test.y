@@ -250,6 +250,7 @@ struct variable_node *getUnion(struct variable_node *left, struct variable_node 
 struct variable_node *getRelativeComplement(struct variable_node *in, struct variable_node *of) {
     struct variable_node *start_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
     struct variable_node *current_node = start_node;
+    struct variable_node *of_start_node = of;
 
     while(in != null) {
         while(of != null) {
@@ -260,8 +261,59 @@ struct variable_node *getRelativeComplement(struct variable_node *in, struct var
             }
             of = of->next;
         }
+        of = of_start_node;
         in = in->next;
     }
+
+    return start_node;
+}
+
+struct variable_node *getHelpers(struct literal_node *start_literal, struct literal_node *current_literal) {
+    struct variable_node *start_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+    struct variable_node *current_node = start_node;
+
+    struct variable_node literal_tmp_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+    literal_tmp_node = current_literal->first_var;
+    
+    while(literal_tmp_node != null) {
+        current_node->name = literal_tmp_node->name;
+        if(literal_tmp_node->next != null) {
+            current_node->next = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+            current_node = current_node->next;
+        }
+        literal_tmp_node = literal_tmp_node->next;
+    }
+
+    current_node = start_node;
+
+    while(start_literal != current_literal) {
+        struct variable_node *current_var_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+        current_var_node = start_literal->first_var;
+
+        while(current_var_node != null) {
+            struct variable_node *previous = null;
+
+            while(current_node != null) {
+                if(strcmp(current_var_node->name, current_node->name) == 0) {
+                    if(previous != null) {
+                        previous->next = current_node->next;
+                        current_node = previous;
+                    } else {
+                        start_node = current_node->next;
+                        current_node = start_node;
+                    }
+                }
+                previous = current_node;
+                current_node = current_node->next;
+            }
+            current_node = start_node;
+            current_var_node = current_var_node->next;
+        }
+
+        start_literal = start_literal->next;
+    }
+
+    return start_node;
 }
 
 void createTable() {
