@@ -2,7 +2,7 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h>
-    #include <bool.h>
+    #include <stdbool.h>
 
     #define PROBLEM 0
     #define SUBPROBLEM 1
@@ -12,14 +12,6 @@
     #define IU 2
     #define GIU 3
     #define UU 4
-
-    int yyerror(char *s);
-    int yylex(void);
-
-    void init_structs(void);
-    void addProblem(char *name);
-    void addVariable(char *name);
-    void createTable();
 
     struct variable_node {
         char name[64];
@@ -35,6 +27,36 @@
         struct variable_node *current_variable;
     };
 
+    struct entry {
+        int nr;
+        char typ;
+
+        struct output *r;
+        struct output *l;
+
+        char info[512];
+    };
+
+    struct output {
+        struct entry *nr;
+        int port;
+    };
+
+    int yyerror(char *s);
+    int yylex(void);
+
+    void init_structs(void);
+    void addProblem(char *name);
+    void addVariable(char *name);
+    void createTable();
+    int isUA(struct variable_node *, struct variable_node *);
+    int isGU(struct variable_node *, struct variable_node *, struct variable_node *, struct variable_node *);
+    int isIU(struct variable_node *, struct variable_node *, struct variable_node *, struct variable_node *);
+    int isGIU(struct variable_node *, struct variable_node *, struct variable_node *, struct variable_node *);
+    int isUU(struct variable_node *, struct variable_node *, struct variable_node *, struct variable_node *);
+    struct variable_node *getIntersection(struct variable_node *, struct variable_node *);
+    struct variable_node *getUnion(struct variable_node *, struct variable_node *);
+    struct variable_node *getRelativeComplement(struct variable_node *, struct variable_node *);
 
     int lineno = 0;
     int sum = 0;
@@ -159,11 +181,10 @@ void addProblem(char *name) {
     printf("New problem: %s\n",name);
 }
 
-void addVariable(char *name, int hilf) {
+void addVariable(char *name) {
     struct variable_node *temp_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
 
     strncpy(temp_node->name, name, 64);
-    temp_node->hilfvariable = hilf;
 
     printf("New variable: %s, Last Variable of Current Node: %s\n", temp_node->name, current_node->current_variable->name);
 
@@ -181,40 +202,103 @@ void setInfo(char *info) {
 }
 
 
-int getDependency(char **mp, char **nhp, char **mq, char **nhq) {
-
+int isUA(struct variable_node *nhp, struct variable_node *mq) {
+    return (strcmp(getIntersection(nhp, mq)->name, "") == 1);
 }
 
-int isUA(char **nhp, int nhplen, char **mq, int mqlen) {
-    return (strcmp(getIntersection(left, right)->name, "") == 1);
-}
+int isGU(struct variable_node *mp, struct variable_node *mq, struct variable_node *nhp, struct variable_node *nhq) {
+    struct variable_node *mpImq = getIntersection(mp, mq);
+    if (strncmp(mpImq->name, "", 1) == 0) {
+        struct variable_node *nhpImpImq = getIntersection(mpImq, nhp);
 
-int isGU(char **mp, int mplen, char **nhp, int nhplen, char **mq, int mqlen, char **nhq, int nhqlen) {
-    char **mpimq = getIntersection(mp, mplen, mq, mqlen);
-    if (mpimq != 0) {
-        int mpimq_len = getArrayLength(mpimq);
-        char **nhpimpimq = getIntersection(mpimq, mpimq_len, nhp, nhplen);
+        if (strncmp(nhpImpImq->name, "", 1) == 0) {
+            struct variable_node *mqUnhp = getUnion(mq, nhp);
+            struct variable_node *mpUnhq = getUnion(mp, nhq);
 
-        if (nhpimpimq == 0) {
+            struct variable_node *mpRCmqUnhp = getRelativeComplement(mp, mqUnhp);
+            struct variable_node *mqRCmpUnhq = getRelativeComplement(mq, mpUnhq);
 
-        } else {
-            return false;
+            if (strncmp(mpRCmqUnhp->name, "", 1) != 0 || strncmp(mqRCmpUnhq->name, "", 1) != 0) {
+                return true;
+            }
         }
-    } else {
-        return false;
     }
+
+    return false;
 }
 
-struct variable_node *getIntersection(struct node *left, struct node *right) {
+int isIU(struct variable_node *mp, struct variable_node *mq, struct variable_node *nhp, struct variable_node *nhq) {
+    struct variable_node *mpImq = getIntersection(mp, mq);
+
+    if(strncmp(mpImq->name, "", 1) == 0) {
+        struct variable_node *mqUnhp = getUnion(mq, nhp);
+        struct variable_node *mpUnhq = getUnion(mp, nhq);
+
+        struct variable_node *mpRCmqUnhp = getRelativeComplement(mp, mqUnhp);
+        struct variable_node *mqRCmpUnhq = getRelativeComplement(mq, mpUnhq);
+
+        if (strncmp(mpRCmqUnhp->name, "", 1) != 0 && strncmp(mqRCmpUnhq->name, "", 1) != 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+int isGIU(struct variable_node *mp, struct variable_node *mq, struct variable_node *nhp, struct variable_node *nhq) {
+    struct variable_node *mpImq = getIntersection(mp, mq);
+
+    if(strncmp(mpImq->name, "", 1) != 0) {
+        struct variable_node *mpImqInhp = getIntersection(mpImq, nhp);
+
+        if(strncmp(mpImqInhp->name, "", 1) == 0) {
+            struct variable_node *mqUnhp = getUnion(mq, nhp);
+            struct variable_node *mpUnhq = getUnion(mp, nhq);
+
+            struct variable_node *mpRCmqUnhp = getRelativeComplement(mp, mqUnhp);
+            struct variable_node *mqRCmpUnhq = getRelativeComplement(mq, mpUnhq);
+
+            if (strncmp(mpRCmqUnhp->name, "", 1) == 0 && strncmp(mqRCmpUnhq->name, "", 1) == 0) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+int isUU(struct variable_node *mp, struct variable_node *mq, struct variable_node *nhp, struct variable_node *nhq) {
+    struct variable_node *mpImq = getIntersection(mp, mq);
+
+    if(strncmp(mpImq->name, "", 1) != 0) {
+        struct variable_node *mqUnhp = getUnion(mq, nhp);
+        struct variable_node *mpUnhq = getUnion(mp, nhq);
+
+        struct variable_node *mpRCmqUnhp = getRelativeComplement(mp, mqUnhp);
+        struct variable_node *mqRCmpUnhq = getRelativeComplement(mq, mpUnhq);
+
+        if (strncmp(mpRCmqUnhp->name, "", 1) == 0 || strncmp(mqRCmpUnhq->name, "", 1) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+struct variable_node *getRelativeComplement(struct variable_node *left, struct variable_node *right) {
+    return left;
+}
+
+struct variable_node *getIntersection(struct variable_node *left, struct variable_node *right) {
 
     struct variable_node *start_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
     struct variable_node *current_node = start_node;
     strncpy(start_node->name, "", 1);
 
-    while(left != null) {
-        while(right != null) {
+    while(left != NULL) {
+        while(right != NULL) {
             if (strcmp(left->name, right->name) == 0) {
-                current_node->name = left->name;
+                strncpy(current_node->name, left->name, 64);
                 current_node->next = (struct variable_node *)(malloc(sizeof(struct variable_node)));
                 current_node = current_node->next;
             }
@@ -227,21 +311,39 @@ struct variable_node *getIntersection(struct node *left, struct node *right) {
 
 }
 
-struct variable_node *getUnion(struct node *left, struct node *right) {
+struct variable_node *getUnion(struct variable_node *left, struct variable_node *right) {
     struct variable_node *start_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
     struct variable_node *current_node = start_node;
-    strncpy(start_node->name, "", 1);
 
-    while(left != null) {
-        while(right != null) {
-            if (strcmp(left->name, right->name) == 0) {
-                current_node->name = left->name;
-                current_node->next = (struct variable_node *)(malloc(sizeof(struct variable_node)));
-                current_node = current_node->next;
-            }
-            right = right->next;
-        }
+    while(left != NULL) {
+        strncpy(current_node->name, left->name, 64);
+        current_node->next = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+        current_node = current_node->next;
+
         left = left->next;
+    }
+
+    while(right != NULL) {
+        strncpy(current_node->name, left->name, 64);
+        current_node->next = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+        current_node = current_node->next;
+
+        left = left->next;
+    }
+
+    current_node = start_node;
+
+    while(current_node != NULL) {
+        struct variable_node *tmp_node = current_node->next;
+        struct variable_node *last_tmp_node = current_node;
+
+        while(tmp_node != NULL) {
+            if(strcmp(current_node->name, tmp_node->name) == 0){
+                last_tmp_node->next = tmp_node->next;
+            }
+            last_tmp_node = tmp_node;
+            tmp_node = tmp_node->next;
+        }
     }
 
     return start_node;
@@ -251,5 +353,5 @@ struct variable_node *getUnion(struct node *left, struct node *right) {
 
 void createTable() {
     // Create E node
-
+    
 }
