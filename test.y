@@ -2,27 +2,33 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h>
+    #include <bool.h>
 
     #define PROBLEM 0
     #define SUBPROBLEM 1
+
+    #define UA 0
+    #define GU 1
+    #define IU 2
+    #define GIU 3
+    #define UU 4
 
     int yyerror(char *s);
     int yylex(void);
 
     void init_structs(void);
     void addProblem(char *name);
-    void addVariable(char *name, int hilf);
+    void addVariable(char *name);
+    void createTable();
 
     struct variable_node {
         char name[64];
-        int pos;
-        int hilfvariable;
         struct variable_node *next;
     };
 
     struct literal_node {
         char name[64];
-        char expression[512];
+        char info[512];
         int type;
         struct literal_node *next;
         struct variable_node *first_var;
@@ -63,7 +69,7 @@ element             : listodervar
 endingelement       : listodervar
                     | listodervar COMMA endingelement
 
-listodervar         : intodervar {addVariable($1,1);}
+listodervar         : intodervar {addVariable($1);}
                     | list
 
 intodervar          : INT {$$ = $1}
@@ -82,11 +88,11 @@ rulelist            : statement COMMA rulelist
 
 statement           : {addProblem("math");} math
                     | function
-                    | VAR {addProblem("math"); addVariable($1,1);} mathsym math
-                    | VAR IS {addProblem("is"); addVariable($1,1);} statement
+                    | VAR {addProblem("math"); addVariable($1);} mathsym math
+                    | VAR IS {addProblem("is"); addVariable($1);} statement
 
 math                : math mathsym math
-                    | intodervar {addVariable($1,1);}
+                    | intodervar {addVariable($1);}
 
 mathsym             : GTE
                     | LTE
@@ -100,7 +106,7 @@ mathsym             : GTE
 function            : LABEL {addProblem($1);} OPA args CPA
 
 args                : args COMMA args
-                    | intodervar {addVariable($1, 1);}
+                    | intodervar {addVariable($1);}
                     | LABEL {printf("args: %s\n", $1)}
                     | list
 
@@ -168,4 +174,82 @@ void addVariable(char *name, int hilf) {
         current_node->current_variable->next = temp_node;
         current_node->current_variable = temp_node;
     }
+}
+
+void setInfo(char *info) {
+    strncpy(current_node->info, info, 512);
+}
+
+
+int getDependency(char **mp, char **nhp, char **mq, char **nhq) {
+
+}
+
+int isUA(char **nhp, int nhplen, char **mq, int mqlen) {
+    return (strcmp(getIntersection(left, right)->name, "") == 1);
+}
+
+int isGU(char **mp, int mplen, char **nhp, int nhplen, char **mq, int mqlen, char **nhq, int nhqlen) {
+    char **mpimq = getIntersection(mp, mplen, mq, mqlen);
+    if (mpimq != 0) {
+        int mpimq_len = getArrayLength(mpimq);
+        char **nhpimpimq = getIntersection(mpimq, mpimq_len, nhp, nhplen);
+
+        if (nhpimpimq == 0) {
+
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
+struct variable_node *getIntersection(struct node *left, struct node *right) {
+
+    struct variable_node *start_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+    struct variable_node *current_node = start_node;
+    strncpy(start_node->name, "", 1);
+
+    while(left != null) {
+        while(right != null) {
+            if (strcmp(left->name, right->name) == 0) {
+                current_node->name = left->name;
+                current_node->next = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+                current_node = current_node->next;
+            }
+            right = right->next;
+        }
+        left = left->next;
+    }
+
+    return start_node;
+
+}
+
+struct variable_node *getUnion(struct node *left, struct node *right) {
+    struct variable_node *start_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+    struct variable_node *current_node = start_node;
+    strncpy(start_node->name, "", 1);
+
+    while(left != null) {
+        while(right != null) {
+            if (strcmp(left->name, right->name) == 0) {
+                current_node->name = left->name;
+                current_node->next = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+                current_node = current_node->next;
+            }
+            right = right->next;
+        }
+        left = left->next;
+    }
+
+    return start_node;
+}
+
+
+
+void createTable() {
+    // Create E node
+
 }
