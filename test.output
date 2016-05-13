@@ -8,9 +8,9 @@ Terminals which are not used
 
 State 9 conflicts: 1 shift/reduce
 State 28 conflicts: 1 shift/reduce
-State 39 conflicts: 1 shift/reduce
-State 55 conflicts: 1 shift/reduce
-State 58 conflicts: 8 shift/reduce
+State 40 conflicts: 1 shift/reduce
+State 56 conflicts: 1 shift/reduce
+State 59 conflicts: 8 shift/reduce
 
 
 Grammar
@@ -36,80 +36,82 @@ Grammar
    12           | VAR
    13           | OPA INT CPA
 
-   14 entry: functionselect DOT LF entry
-   15      | slash
+   14 @1: /* empty */
 
-   16 functionselect: function CD rulelist
-   17               | function
+   15 entry: functionselect DOT @1 LF entry
+   16      | slash
 
-   18 rulelist: statement COMMA rulelist
-   19         | statement
+   17 functionselect: function CD rulelist
+   18               | function
 
-   20 @1: /* empty */
+   19 rulelist: statement COMMA rulelist
+   20         | statement
 
-   21 statement: @1 math
-   22          | function
+   21 @2: /* empty */
 
-   23 @2: /* empty */
+   22 statement: @2 math
+   23          | function
 
-   24 statement: VAR @2 mathsym math
+   24 @3: /* empty */
 
-   25 @3: /* empty */
+   25 statement: VAR @3 mathsym math
 
-   26 statement: VAR IS @3 statement
+   26 @4: /* empty */
 
-   27 math: math mathsym math
-   28     | intodervar
+   27 statement: VAR IS @4 statement
 
-   29 mathsym: GTE
-   30        | LTE
-   31        | LT
-   32        | GT
-   33        | PLUS
-   34        | MINUS
-   35        | MULTIPLY
-   36        | DIVIDE
+   28 math: math mathsym math
+   29     | intodervar
 
-   37 @4: /* empty */
+   30 mathsym: GTE
+   31        | LTE
+   32        | LT
+   33        | GT
+   34        | PLUS
+   35        | MINUS
+   36        | MULTIPLY
+   37        | DIVIDE
 
-   38 function: LABEL @4 OPA args CPA
+   38 @5: /* empty */
 
-   39 args: args COMMA args
-   40     | intodervar
-   41     | LABEL
-   42     | list
+   39 function: LABEL @5 OPA args CPA
+
+   40 args: args COMMA args
+   41     | intodervar
+   42     | LABEL
+   43     | list
 
 
 Terminals, with rules where they appear
 
 $end (0) 0
 error (256)
-IS (258) 26
-GT (259) 32
-LT (260) 31
-LTE (261) 30
-GTE (262) 29
-DIVIDE (263) 36
-MULTIPLY (264) 35
-MINUS (265) 34
-PLUS (266) 33
-LABEL (267) 38 41
+IS (258) 27
+GT (259) 33
+LT (260) 32
+LTE (261) 31
+GTE (262) 30
+DIVIDE (263) 37
+MULTIPLY (264) 36
+MINUS (265) 35
+PLUS (266) 34
+LABEL (267) 39 42
 INT (268) 11 13
-VAR (269) 12 24 26
-OPA (270) 13 38
-CPA (271) 13 38
-COMMA (272) 5 8 18 39
+VAR (269) 12 25 27
+OPA (270) 13 39
+CPA (271) 13 39
+COMMA (272) 5 8 19 40
 IF (273)
 EQ (274)
 PIPE (275) 2
-LF (276) 14
+LF (276) 15
 WWDDIWU (277)
 OBR (278) 1
 CBR (279) 1
-DOT (280) 14
-CD (281) 16
+DOT (280) 15
+CD (281) 17
 SEMICOLON (282)
-slash (283) 15
+slash (283) 16
 
 
 Nonterminals, with rules where they appear
@@ -117,7 +119,7 @@ Nonterminals, with rules where they appear
 $accept (29)
     on left: 0
 list (30)
-    on left: 1, on right: 10 42
+    on left: 1, on right: 10 43
 innerlist (31)
     on left: 2 3, on right: 1
 element (32)
@@ -127,41 +129,43 @@ endingelement (33)
 listodervar (34)
     on left: 9 10, on right: 2 4 5 7 8
 intodervar (35)
-    on left: 11 12 13, on right: 9 28 40
+    on left: 11 12 13, on right: 9 29 41
 entry (36)
-    on left: 14 15, on right: 0 14
-functionselect (37)
-    on left: 16 17, on right: 14
-rulelist (38)
-    on left: 18 19, on right: 16 18
-statement (39)
-    on left: 21 22 24 26, on right: 18 19 26
-@1 (40)
-    on left: 20, on right: 21
+    on left: 15 16, on right: 0 15
+@1 (37)
+    on left: 14, on right: 15
+functionselect (38)
+    on left: 17 18, on right: 15
+rulelist (39)
+    on left: 19 20, on right: 17 19
+statement (40)
+    on left: 22 23 25 27, on right: 19 20 27
 @2 (41)
-    on left: 23, on right: 24
+    on left: 21, on right: 22
 @3 (42)
-    on left: 25, on right: 26
-math (43)
-    on left: 27 28, on right: 21 24 27
-mathsym (44)
-    on left: 29 30 31 32 33 34 35 36, on right: 24 27
-function (45)
-    on left: 38, on right: 16 17 22
-@4 (46)
-    on left: 37, on right: 38
-args (47)
-    on left: 39 40 41 42, on right: 38 39
+    on left: 24, on right: 25
+@4 (43)
+    on left: 26, on right: 27
+math (44)
+    on left: 28 29, on right: 22 25 28
+mathsym (45)
+    on left: 30 31 32 33 34 35 36 37, on right: 25 28
+function (46)
+    on left: 39, on right: 17 18 23
+@5 (47)
+    on left: 38, on right: 39
+args (48)
+    on left: 40 41 42 43, on right: 39 40
 
 
 state 0
 
     0 $accept: . entry $end
-   14 entry: . functionselect DOT LF entry
-   15      | . slash
-   16 functionselect: . function CD rulelist
-   17               | . function
-   38 function: . LABEL @4 OPA args CPA
+   15 entry: . functionselect DOT @1 LF entry
+   16      | . slash
+   17 functionselect: . function CD rulelist
+   18               | . function
+   39 function: . LABEL @5 OPA args CPA
 
     LABEL  shift, and go to state 1
     slash  shift, and go to state 2
@@ -173,19 +177,19 @@ state 0
 
 state 1
 
-   37 @4: .
-   38 function: LABEL . @4 OPA args CPA
+   38 @5: .
+   39 function: LABEL . @5 OPA args CPA
 
-    $default  reduce using rule 37 (@4)
+    $default  reduce using rule 38 (@5)
 
-    @4  go to state 6
+    @5  go to state 6
 
 
 state 2
 
-   15 entry: slash .
+   16 entry: slash .
 
-    $default  reduce using rule 15 (entry)
+    $default  reduce using rule 16 (entry)
 
 
 state 3
@@ -197,24 +201,24 @@ state 3
 
 state 4
 
-   14 entry: functionselect . DOT LF entry
+   15 entry: functionselect . DOT @1 LF entry
 
     DOT  shift, and go to state 8
 
 
 state 5
 
-   16 functionselect: function . CD rulelist
-   17               | function .  [DOT]
+   17 functionselect: function . CD rulelist
+   18               | function .  [DOT]
 
     CD  shift, and go to state 9
 
-    $default  reduce using rule 17 (functionselect)
+    $default  reduce using rule 18 (functionselect)
 
 
 state 6
 
-   38 function: LABEL @4 . OPA args CPA
+   39 function: LABEL @5 . OPA args CPA
 
     OPA  shift, and go to state 10
 
@@ -228,32 +232,35 @@ state 7
 
 state 8
 
-   14 entry: functionselect DOT . LF entry
+   14 @1: .
+   15 entry: functionselect DOT . @1 LF entry
 
-    LF  shift, and go to state 11
+    $default  reduce using rule 14 (@1)
+
+    @1  go to state 11
 
 
 state 9
 
-   16 functionselect: function CD . rulelist
-   18 rulelist: . statement COMMA rulelist
-   19         | . statement
-   20 @1: .  [INT, VAR, OPA]
-   21 statement: . @1 math
-   22          | . function
-   24          | . VAR @2 mathsym math
-   26          | . VAR IS @3 statement
-   38 function: . LABEL @4 OPA args CPA
+   17 functionselect: function CD . rulelist
+   19 rulelist: . statement COMMA rulelist
+   20         | . statement
+   21 @2: .  [INT, VAR, OPA]
+   22 statement: . @2 math
+   23          | . function
+   25          | . VAR @3 mathsym math
+   27          | . VAR IS @4 statement
+   39 function: . LABEL @5 OPA args CPA
 
     LABEL  shift, and go to state 1
     VAR    shift, and go to state 12
 
-    VAR       [reduce using rule 20 (@1)]
-    $default  reduce using rule 20 (@1)
+    VAR       [reduce using rule 21 (@2)]
+    $default  reduce using rule 21 (@2)
 
     rulelist   go to state 13
     statement  go to state 14
-    @1         go to state 15
+    @2         go to state 15
     function   go to state 16
 
 
@@ -263,11 +270,11 @@ state 10
    11 intodervar: . INT
    12           | . VAR
    13           | . OPA INT CPA
-   38 function: LABEL @4 OPA . args CPA
-   39 args: . args COMMA args
-   40     | . intodervar
-   41     | . LABEL
-   42     | . list
+   39 function: LABEL @5 OPA . args CPA
+   40 args: . args COMMA args
+   41     | . intodervar
+   42     | . LABEL
+   43     | . list
 
     LABEL  shift, and go to state 17
     INT    shift, and go to state 18
@@ -282,49 +289,39 @@ state 10
 
 state 11
 
-   14 entry: . functionselect DOT LF entry
-   14      | functionselect DOT LF . entry
-   15      | . slash
-   16 functionselect: . function CD rulelist
-   17               | . function
-   38 function: . LABEL @4 OPA args CPA
+   15 entry: functionselect DOT @1 . LF entry
 
-    LABEL  shift, and go to state 1
-    slash  shift, and go to state 2
-
-    entry           go to state 25
-    functionselect  go to state 4
-    function        go to state 5
+    LF  shift, and go to state 25
 
 
 state 12
 
-   23 @2: .  [GT, LT, LTE, GTE, DIVIDE, MULTIPLY, MINUS, PLUS]
-   24 statement: VAR . @2 mathsym math
-   26          | VAR . IS @3 statement
+   24 @3: .  [GT, LT, LTE, GTE, DIVIDE, MULTIPLY, MINUS, PLUS]
+   25 statement: VAR . @3 mathsym math
+   27          | VAR . IS @4 statement
 
     IS  shift, and go to state 26
 
-    $default  reduce using rule 23 (@2)
+    $default  reduce using rule 24 (@3)
 
-    @2  go to state 27
+    @3  go to state 27
 
 
 state 13
 
-   16 functionselect: function CD rulelist .
+   17 functionselect: function CD rulelist .
 
-    $default  reduce using rule 16 (functionselect)
+    $default  reduce using rule 17 (functionselect)
 
 
 state 14
 
-   18 rulelist: statement . COMMA rulelist
-   19         | statement .  [DOT]
+   19 rulelist: statement . COMMA rulelist
+   20         | statement .  [DOT]
 
     COMMA  shift, and go to state 28
 
-    $default  reduce using rule 19 (rulelist)
+    $default  reduce using rule 20 (rulelist)
 
 
 state 15
@@ -332,9 +329,9 @@ state 15
    11 intodervar: . INT
    12           | . VAR
    13           | . OPA INT CPA
-   21 statement: @1 . math
-   27 math: . math mathsym math
-   28     | . intodervar
+   22 statement: @2 . math
+   28 math: . math mathsym math
+   29     | . intodervar
 
     INT  shift, and go to state 18
     VAR  shift, and go to state 19
@@ -346,16 +343,16 @@ state 15
 
 state 16
 
-   22 statement: function .
+   23 statement: function .
 
-    $default  reduce using rule 22 (statement)
+    $default  reduce using rule 23 (statement)
 
 
 state 17
 
-   41 args: LABEL .
+   42 args: LABEL .
 
-    $default  reduce using rule 41 (args)
+    $default  reduce using rule 42 (args)
 
 
 state 18
@@ -410,22 +407,22 @@ state 21
 
 state 22
 
-   42 args: list .
+   43 args: list .
 
-    $default  reduce using rule 42 (args)
+    $default  reduce using rule 43 (args)
 
 
 state 23
 
-   40 args: intodervar .
+   41 args: intodervar .
 
-    $default  reduce using rule 40 (args)
+    $default  reduce using rule 41 (args)
 
 
 state 24
 
-   38 function: LABEL @4 OPA args . CPA
-   39 args: args . COMMA args
+   39 function: LABEL @5 OPA args . CPA
+   40 args: args . COMMA args
 
     CPA    shift, and go to state 37
     COMMA  shift, and go to state 38
@@ -433,108 +430,118 @@ state 24
 
 state 25
 
-   14 entry: functionselect DOT LF entry .
+   15 entry: . functionselect DOT @1 LF entry
+   15      | functionselect DOT @1 LF . entry
+   16      | . slash
+   17 functionselect: . function CD rulelist
+   18               | . function
+   39 function: . LABEL @5 OPA args CPA
 
-    $default  reduce using rule 14 (entry)
+    LABEL  shift, and go to state 1
+    slash  shift, and go to state 2
+
+    entry           go to state 39
+    functionselect  go to state 4
+    function        go to state 5
 
 
 state 26
 
-   25 @3: .
-   26 statement: VAR IS . @3 statement
+   26 @4: .
+   27 statement: VAR IS . @4 statement
 
-    $default  reduce using rule 25 (@3)
+    $default  reduce using rule 26 (@4)
 
-    @3  go to state 39
+    @4  go to state 40
 
 
 state 27
 
-   24 statement: VAR @2 . mathsym math
-   29 mathsym: . GTE
-   30        | . LTE
-   31        | . LT
-   32        | . GT
-   33        | . PLUS
-   34        | . MINUS
-   35        | . MULTIPLY
-   36        | . DIVIDE
+   25 statement: VAR @3 . mathsym math
+   30 mathsym: . GTE
+   31        | . LTE
+   32        | . LT
+   33        | . GT
+   34        | . PLUS
+   35        | . MINUS
+   36        | . MULTIPLY
+   37        | . DIVIDE
 
-    GT        shift, and go to state 40
-    LT        shift, and go to state 41
-    LTE       shift, and go to state 42
-    GTE       shift, and go to state 43
-    DIVIDE    shift, and go to state 44
-    MULTIPLY  shift, and go to state 45
-    MINUS     shift, and go to state 46
-    PLUS      shift, and go to state 47
+    GT        shift, and go to state 41
+    LT        shift, and go to state 42
+    LTE       shift, and go to state 43
+    GTE       shift, and go to state 44
+    DIVIDE    shift, and go to state 45
+    MULTIPLY  shift, and go to state 46
+    MINUS     shift, and go to state 47
+    PLUS      shift, and go to state 48
 
-    mathsym  go to state 48
+    mathsym  go to state 49
 
 
 state 28
 
-   18 rulelist: . statement COMMA rulelist
-   18         | statement COMMA . rulelist
-   19         | . statement
-   20 @1: .  [INT, VAR, OPA]
-   21 statement: . @1 math
-   22          | . function
-   24          | . VAR @2 mathsym math
-   26          | . VAR IS @3 statement
-   38 function: . LABEL @4 OPA args CPA
+   19 rulelist: . statement COMMA rulelist
+   19         | statement COMMA . rulelist
+   20         | . statement
+   21 @2: .  [INT, VAR, OPA]
+   22 statement: . @2 math
+   23          | . function
+   25          | . VAR @3 mathsym math
+   27          | . VAR IS @4 statement
+   39 function: . LABEL @5 OPA args CPA
 
     LABEL  shift, and go to state 1
     VAR    shift, and go to state 12
 
-    VAR       [reduce using rule 20 (@1)]
-    $default  reduce using rule 20 (@1)
+    VAR       [reduce using rule 21 (@2)]
+    $default  reduce using rule 21 (@2)
 
-    rulelist   go to state 49
+    rulelist   go to state 50
     statement  go to state 14
-    @1         go to state 15
+    @2         go to state 15
     function   go to state 16
 
 
 state 29
 
-   28 math: intodervar .
+   29 math: intodervar .
 
-    $default  reduce using rule 28 (math)
+    $default  reduce using rule 29 (math)
 
 
 state 30
 
-   21 statement: @1 math .  [COMMA, DOT]
-   27 math: math . mathsym math
-   29 mathsym: . GTE
-   30        | . LTE
-   31        | . LT
-   32        | . GT
-   33        | . PLUS
-   34        | . MINUS
-   35        | . MULTIPLY
-   36        | . DIVIDE
+   22 statement: @2 math .  [COMMA, DOT]
+   28 math: math . mathsym math
+   30 mathsym: . GTE
+   31        | . LTE
+   32        | . LT
+   33        | . GT
+   34        | . PLUS
+   35        | . MINUS
+   36        | . MULTIPLY
+   37        | . DIVIDE
 
-    GT        shift, and go to state 40
-    LT        shift, and go to state 41
-    LTE       shift, and go to state 42
-    GTE       shift, and go to state 43
-    DIVIDE    shift, and go to state 44
-    MULTIPLY  shift, and go to state 45
-    MINUS     shift, and go to state 46
-    PLUS      shift, and go to state 47
+    GT        shift, and go to state 41
+    LT        shift, and go to state 42
+    LTE       shift, and go to state 43
+    GTE       shift, and go to state 44
+    DIVIDE    shift, and go to state 45
+    MULTIPLY  shift, and go to state 46
+    MINUS     shift, and go to state 47
+    PLUS      shift, and go to state 48
 
-    $default  reduce using rule 21 (statement)
+    $default  reduce using rule 22 (statement)
 
-    mathsym  go to state 50
+    mathsym  go to state 51
 
 
 state 31
 
    13 intodervar: OPA INT . CPA
 
-    CPA  shift, and go to state 51
+    CPA  shift, and go to state 52
 
 
 state 32
@@ -548,7 +555,7 @@ state 33
 
     1 list: OBR innerlist . CBR
 
-    CBR  shift, and go to state 52
+    CBR  shift, and go to state 53
 
 
 state 34
@@ -556,7 +563,7 @@ state 34
     2 innerlist: element . PIPE listodervar
     3          | element .  [CBR]
 
-    PIPE  shift, and go to state 53
+    PIPE  shift, and go to state 54
 
     $default  reduce using rule 3 (innerlist)
 
@@ -566,7 +573,7 @@ state 35
     4 element: listodervar .  [PIPE, CBR]
     5        | listodervar . COMMA endingelement
 
-    COMMA  shift, and go to state 54
+    COMMA  shift, and go to state 55
 
     $default  reduce using rule 4 (element)
 
@@ -580,9 +587,9 @@ state 36
 
 state 37
 
-   38 function: LABEL @4 OPA args CPA .
+   39 function: LABEL @5 OPA args CPA .
 
-    $default  reduce using rule 38 (function)
+    $default  reduce using rule 39 (function)
 
 
 state 38
@@ -591,11 +598,11 @@ state 38
    11 intodervar: . INT
    12           | . VAR
    13           | . OPA INT CPA
-   39 args: . args COMMA args
-   39     | args COMMA . args
-   40     | . intodervar
-   41     | . LABEL
-   42     | . list
+   40 args: . args COMMA args
+   40     | args COMMA . args
+   41     | . intodervar
+   42     | . LABEL
+   43     | . list
 
     LABEL  shift, and go to state 17
     INT    shift, and go to state 18
@@ -605,118 +612,101 @@ state 38
 
     list        go to state 22
     intodervar  go to state 23
-    args        go to state 55
+    args        go to state 56
 
 
 state 39
 
-   20 @1: .  [INT, VAR, OPA]
-   21 statement: . @1 math
-   22          | . function
-   24          | . VAR @2 mathsym math
-   26          | . VAR IS @3 statement
-   26          | VAR IS @3 . statement
-   38 function: . LABEL @4 OPA args CPA
+   15 entry: functionselect DOT @1 LF entry .
 
-    LABEL  shift, and go to state 1
-    VAR    shift, and go to state 12
-
-    VAR       [reduce using rule 20 (@1)]
-    $default  reduce using rule 20 (@1)
-
-    statement  go to state 56
-    @1         go to state 15
-    function   go to state 16
+    $default  reduce using rule 15 (entry)
 
 
 state 40
 
-   32 mathsym: GT .
+   21 @2: .  [INT, VAR, OPA]
+   22 statement: . @2 math
+   23          | . function
+   25          | . VAR @3 mathsym math
+   27          | . VAR IS @4 statement
+   27          | VAR IS @4 . statement
+   39 function: . LABEL @5 OPA args CPA
 
-    $default  reduce using rule 32 (mathsym)
+    LABEL  shift, and go to state 1
+    VAR    shift, and go to state 12
+
+    VAR       [reduce using rule 21 (@2)]
+    $default  reduce using rule 21 (@2)
+
+    statement  go to state 57
+    @2         go to state 15
+    function   go to state 16
 
 
 state 41
 
-   31 mathsym: LT .
-
-    $default  reduce using rule 31 (mathsym)
-
-
-state 42
-
-   30 mathsym: LTE .
-
-    $default  reduce using rule 30 (mathsym)
-
-
-state 43
-
-   29 mathsym: GTE .
-
-    $default  reduce using rule 29 (mathsym)
-
-
-state 44
-
-   36 mathsym: DIVIDE .
-
-    $default  reduce using rule 36 (mathsym)
-
-
-state 45
-
-   35 mathsym: MULTIPLY .
-
-    $default  reduce using rule 35 (mathsym)
-
-
-state 46
-
-   34 mathsym: MINUS .
-
-    $default  reduce using rule 34 (mathsym)
-
-
-state 47
-
-   33 mathsym: PLUS .
+   33 mathsym: GT .
 
     $default  reduce using rule 33 (mathsym)
 
 
+state 42
+
+   32 mathsym: LT .
+
+    $default  reduce using rule 32 (mathsym)
+
+
+state 43
+
+   31 mathsym: LTE .
+
+    $default  reduce using rule 31 (mathsym)
+
+
+state 44
+
+   30 mathsym: GTE .
+
+    $default  reduce using rule 30 (mathsym)
+
+
+state 45
+
+   37 mathsym: DIVIDE .
+
+    $default  reduce using rule 37 (mathsym)
+
+
+state 46
+
+   36 mathsym: MULTIPLY .
+
+    $default  reduce using rule 36 (mathsym)
+
+
+state 47
+
+   35 mathsym: MINUS .
+
+    $default  reduce using rule 35 (mathsym)
+
+
 state 48
 
-   11 intodervar: . INT
-   12           | . VAR
-   13           | . OPA INT CPA
-   24 statement: VAR @2 mathsym . math
-   27 math: . math mathsym math
-   28     | . intodervar
+   34 mathsym: PLUS .
 
-    INT  shift, and go to state 18
-    VAR  shift, and go to state 19
-    OPA  shift, and go to state 20
-
-    intodervar  go to state 29
-    math        go to state 57
+    $default  reduce using rule 34 (mathsym)
 
 
 state 49
 
-   18 rulelist: statement COMMA rulelist .
-
-    $default  reduce using rule 18 (rulelist)
-
-
-state 50
-
    11 intodervar: . INT
    12           | . VAR
    13           | . OPA INT CPA
-   27 math: . math mathsym math
-   27     | math mathsym . math
-   28     | . intodervar
+   25 statement: VAR @3 mathsym . math
+   28 math: . math mathsym math
+   29     | . intodervar
 
     INT  shift, and go to state 18
     VAR  shift, and go to state 19
@@ -726,21 +716,45 @@ state 50
     math        go to state 58
 
 
+state 50
+
+   19 rulelist: statement COMMA rulelist .
+
+    $default  reduce using rule 19 (rulelist)
+
+
 state 51
+
+   11 intodervar: . INT
+   12           | . VAR
+   13           | . OPA INT CPA
+   28 math: . math mathsym math
+   28     | math mathsym . math
+   29     | . intodervar
+
+    INT  shift, and go to state 18
+    VAR  shift, and go to state 19
+    OPA  shift, and go to state 20
+
+    intodervar  go to state 29
+    math        go to state 59
+
+
+state 52
 
    13 intodervar: OPA INT CPA .
 
     $default  reduce using rule 13 (intodervar)
 
 
-state 52
+state 53
 
     1 list: OBR innerlist CBR .
 
     $default  reduce using rule 1 (list)
 
 
-state 53
+state 54
 
     1 list: . OBR innerlist CBR
     2 innerlist: element PIPE . listodervar
@@ -756,11 +770,11 @@ state 53
     OBR  shift, and go to state 21
 
     list         go to state 32
-    listodervar  go to state 59
+    listodervar  go to state 60
     intodervar   go to state 36
 
 
-state 54
+state 55
 
     1 list: . OBR innerlist CBR
     5 element: listodervar COMMA . endingelement
@@ -778,116 +792,116 @@ state 54
     OBR  shift, and go to state 21
 
     list           go to state 32
-    endingelement  go to state 60
-    listodervar    go to state 61
+    endingelement  go to state 61
+    listodervar    go to state 62
     intodervar     go to state 36
-
-
-state 55
-
-   39 args: args . COMMA args  [CPA, COMMA]
-   39     | args COMMA args .  [CPA, COMMA]
-
-    COMMA  shift, and go to state 38
-
-    COMMA     [reduce using rule 39 (args)]
-    $default  reduce using rule 39 (args)
 
 
 state 56
 
-   26 statement: VAR IS @3 statement .
+   40 args: args . COMMA args  [CPA, COMMA]
+   40     | args COMMA args .  [CPA, COMMA]
 
-    $default  reduce using rule 26 (statement)
+    COMMA  shift, and go to state 38
+
+    COMMA     [reduce using rule 40 (args)]
+    $default  reduce using rule 40 (args)
 
 
 state 57
 
-   24 statement: VAR @2 mathsym math .  [COMMA, DOT]
-   27 math: math . mathsym math
-   29 mathsym: . GTE
-   30        | . LTE
-   31        | . LT
-   32        | . GT
-   33        | . PLUS
-   34        | . MINUS
-   35        | . MULTIPLY
-   36        | . DIVIDE
+   27 statement: VAR IS @4 statement .
 
-    GT        shift, and go to state 40
-    LT        shift, and go to state 41
-    LTE       shift, and go to state 42
-    GTE       shift, and go to state 43
-    DIVIDE    shift, and go to state 44
-    MULTIPLY  shift, and go to state 45
-    MINUS     shift, and go to state 46
-    PLUS      shift, and go to state 47
-
-    $default  reduce using rule 24 (statement)
-
-    mathsym  go to state 50
+    $default  reduce using rule 27 (statement)
 
 
 state 58
 
-   27 math: math . mathsym math  [GT, LT, LTE, GTE, DIVIDE, MULTIPLY, MINUS, PLUS, COMMA, DOT]
-   27     | math mathsym math .  [GT, LT, LTE, GTE, DIVIDE, MULTIPLY, MINUS, PLUS, COMMA, DOT]
-   29 mathsym: . GTE
-   30        | . LTE
-   31        | . LT
-   32        | . GT
-   33        | . PLUS
-   34        | . MINUS
-   35        | . MULTIPLY
-   36        | . DIVIDE
+   25 statement: VAR @3 mathsym math .  [COMMA, DOT]
+   28 math: math . mathsym math
+   30 mathsym: . GTE
+   31        | . LTE
+   32        | . LT
+   33        | . GT
+   34        | . PLUS
+   35        | . MINUS
+   36        | . MULTIPLY
+   37        | . DIVIDE
 
-    GT        shift, and go to state 40
-    LT        shift, and go to state 41
-    LTE       shift, and go to state 42
-    GTE       shift, and go to state 43
-    DIVIDE    shift, and go to state 44
-    MULTIPLY  shift, and go to state 45
-    MINUS     shift, and go to state 46
-    PLUS      shift, and go to state 47
+    GT        shift, and go to state 41
+    LT        shift, and go to state 42
+    LTE       shift, and go to state 43
+    GTE       shift, and go to state 44
+    DIVIDE    shift, and go to state 45
+    MULTIPLY  shift, and go to state 46
+    MINUS     shift, and go to state 47
+    PLUS      shift, and go to state 48
 
-    GT        [reduce using rule 27 (math)]
-    LT        [reduce using rule 27 (math)]
-    LTE       [reduce using rule 27 (math)]
-    GTE       [reduce using rule 27 (math)]
-    DIVIDE    [reduce using rule 27 (math)]
-    MULTIPLY  [reduce using rule 27 (math)]
-    MINUS     [reduce using rule 27 (math)]
-    PLUS      [reduce using rule 27 (math)]
-    $default  reduce using rule 27 (math)
+    $default  reduce using rule 25 (statement)
 
-    mathsym  go to state 50
+    mathsym  go to state 51
 
 
 state 59
+
+   28 math: math . mathsym math  [GT, LT, LTE, GTE, DIVIDE, MULTIPLY, MINUS, PLUS, COMMA, DOT]
+   28     | math mathsym math .  [GT, LT, LTE, GTE, DIVIDE, MULTIPLY, MINUS, PLUS, COMMA, DOT]
+   30 mathsym: . GTE
+   31        | . LTE
+   32        | . LT
+   33        | . GT
+   34        | . PLUS
+   35        | . MINUS
+   36        | . MULTIPLY
+   37        | . DIVIDE
+
+    GT        shift, and go to state 41
+    LT        shift, and go to state 42
+    LTE       shift, and go to state 43
+    GTE       shift, and go to state 44
+    DIVIDE    shift, and go to state 45
+    MULTIPLY  shift, and go to state 46
+    MINUS     shift, and go to state 47
+    PLUS      shift, and go to state 48
+
+    GT        [reduce using rule 28 (math)]
+    LT        [reduce using rule 28 (math)]
+    LTE       [reduce using rule 28 (math)]
+    GTE       [reduce using rule 28 (math)]
+    DIVIDE    [reduce using rule 28 (math)]
+    MULTIPLY  [reduce using rule 28 (math)]
+    MINUS     [reduce using rule 28 (math)]
+    PLUS      [reduce using rule 28 (math)]
+    $default  reduce using rule 28 (math)
+
+    mathsym  go to state 51
+
+
+state 60
 
     2 innerlist: element PIPE listodervar .
 
     $default  reduce using rule 2 (innerlist)
 
 
-state 60
+state 61
 
     5 element: listodervar COMMA endingelement .
 
     $default  reduce using rule 5 (element)
 
 
-state 61
+state 62
 
     7 endingelement: listodervar .  [PIPE, CBR]
     8              | listodervar . COMMA endingelement
 
-    COMMA  shift, and go to state 62
+    COMMA  shift, and go to state 63
 
     $default  reduce using rule 7 (endingelement)
 
 
-state 62
+state 63
 
     1 list: . OBR innerlist CBR
     7 endingelement: . listodervar
@@ -905,12 +919,12 @@ state 62
     OBR  shift, and go to state 21
 
     list           go to state 32
-    endingelement  go to state 63
-    listodervar    go to state 61
+    endingelement  go to state 64
+    listodervar    go to state 62
     intodervar     go to state 36
 
 
-state 63
+state 64
 
     8 endingelement: listodervar COMMA endingelement .
 
