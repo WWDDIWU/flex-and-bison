@@ -1,5 +1,5 @@
 %{
-    #include "test.tab.h"
+    #include "prolog.tab.h"
 %}
 
 digit [0-9]

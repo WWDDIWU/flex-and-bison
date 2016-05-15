@@ -1,86 +1,24 @@
 %{
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <string.h>
-    #include <stdbool.h>
-
-    #define PROBLEM 0
-    #define SUBPROBLEM 1
-
-    #define UA 0
-    #define GU 1
-    #define IU 2
-    #define GIU 3
-    #define UU 4
-
-    struct variable_node {
-        char name[64];
-        struct variable_node *next;
-    };
-
-    struct literal_node {
-        char name[64];
-        char info[512];
-        int type;
-        struct literal_node *next;
-        struct variable_node *first_var;
-        struct variable_node *current_variable;
-    };
-
-    struct entry {
-        char typ;
-        int nr;
-        struct output *right;
-        struct output *left;
-
-        char info[512];
-    };
-
-    struct print_node {
-        struct entry *entry;
-        struct print_node *next;
-    };
-
-    struct output {
-        struct entry *entry;
-        int port;
-    };
-
-    int yyerror(char *s);
-    int yylex(void);
-
-    void init_structs(void);
-    void addProblem(char *name);
-    void addVariable(char *name);
-    void createTable();
-    int isUA(struct variable_node *, struct variable_node *);
-    int isGU(struct variable_node *, struct variable_node *, struct variable_node *, struct variable_node *);
-    int isIU(struct variable_node *, struct variable_node *, struct variable_node *, struct variable_node *);
-    int isGIU(struct variable_node *, struct variable_node *, struct variable_node *, struct variable_node *);
-    int isUU(struct variable_node *, struct variable_node *, struct variable_node *, struct variable_node *);
-    struct variable_node *getIntersection(struct variable_node *, struct variable_node *);
-    struct variable_node *getUnion(struct variable_node *, struct variable_node *);
-    struct variable_node *getRelativeComplement(struct variable_node *, struct variable_node *);
-    struct entry *newEntry(char);
-    void attach(char*, struct entry*, struct entry*, int);
-    void printTable();
-    void itoa(int n, char s[]);
-    void reverse(char s[]);
+    #include "main.h"
 
     int lineno = 0;
     int sum = 0;
     int g_index = 0;
 
-    struct literal_node *start_node;
-    struct literal_node *current_node;
-    struct print_node *printList;
-    struct print_node *startprintList;
+    literal_node *start_node;
+    literal_node *current_node;
+
+    print_node *printList;
+    print_node *startprintList;
+    print_node *prevprintList;
 %}
 
 %union {
     int int_val;
     char *string_val;
 }
+
+%expect 12
 
 %start entry
 
@@ -164,13 +102,13 @@ int main() {
 
 void init_structs() {
     printList = NULL;
-    start_node = (struct literal_node *)(malloc(sizeof(struct literal_node)));
-    current_node = (struct literal_node *)(malloc(sizeof(struct literal_node)));
+    start_node = (literal_node *)(malloc(sizeof(literal_node)));
+    current_node = (literal_node *)(malloc(sizeof(literal_node)));
     current_node->type = -1;
 }
 
 void addProblem(char *name) {
-    struct literal_node *temp_node = (struct literal_node *)(malloc(sizeof(struct literal_node)));
+    literal_node *temp_node = (literal_node *)(malloc(sizeof(literal_node)));
 
     // initialize node
     strncpy(temp_node->name, name, 64);
@@ -195,7 +133,7 @@ void addProblem(char *name) {
 }
 
 void addVariable(char *name) {
-    struct variable_node *temp_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+    variable_node *temp_node = (variable_node *)(malloc(sizeof(variable_node)));
     temp_node->next = NULL;
 
     strncpy(temp_node->name, name, 64);
@@ -216,22 +154,22 @@ void setInfo(char *info) {
 }
 
 
-int isUA(struct variable_node *nhp, struct variable_node *mq) {
+int isUA(variable_node *nhp, variable_node *mq) {
     return (strcmp(getIntersection(nhp, mq)->name, "") == 1);
 }
 
-int isGU(struct variable_node *mp, struct variable_node *mq, struct variable_node *nhp, struct variable_node *nhq) {
-    struct variable_node *mpImq = getIntersection(mp, mq);
+int isGU(variable_node *mp, variable_node *mq, variable_node *nhp, variable_node *nhq) {
+    variable_node *mpImq = getIntersection(mp, mq);
 
     if (mpImq != NULL) {
-        struct variable_node *nhpImpImq = getIntersection(mpImq, nhp);
+        variable_node *nhpImpImq = getIntersection(mpImq, nhp);
 
         if (nhpImpImq == NULL) {
-            struct variable_node *mqUnhp = getUnion(mq, nhp);
-            struct variable_node *mpUnhq = getUnion(mp, nhq);
+            variable_node *mqUnhp = getUnion(mq, nhp);
+            variable_node *mpUnhq = getUnion(mp, nhq);
 
-            struct variable_node *mpRCmqUnhp = getRelativeComplement(mp, mqUnhp);
-            struct variable_node *mqRCmpUnhq = getRelativeComplement(mq, mpUnhq);
+            variable_node *mpRCmqUnhp = getRelativeComplement(mp, mqUnhp);
+            variable_node *mqRCmpUnhq = getRelativeComplement(mq, mpUnhq);
 
             if (mpRCmqUnhp != NULL || mqRCmpUnhq != NULL) {
                 return true;
@@ -242,15 +180,15 @@ int isGU(struct variable_node *mp, struct variable_node *mq, struct variable_nod
     return false;
 }
 
-int isIU(struct variable_node *mp, struct variable_node *mq, struct variable_node *nhp, struct variable_node *nhq) {
-    struct variable_node *mpImq = getIntersection(mp, mq);
+int isIU(variable_node *mp, variable_node *mq, variable_node *nhp, variable_node *nhq) {
+    variable_node *mpImq = getIntersection(mp, mq);
 
     if(mpImq == NULL) {
-        struct variable_node *mqUnhp = getUnion(mq, nhp);
-        struct variable_node *mpUnhq = getUnion(mp, nhq);
+        variable_node *mqUnhp = getUnion(mq, nhp);
+        variable_node *mpUnhq = getUnion(mp, nhq);
 
-        struct variable_node *mpRCmqUnhp = getRelativeComplement(mp, mqUnhp);
-        struct variable_node *mqRCmpUnhq = getRelativeComplement(mq, mpUnhq);
+        variable_node *mpRCmqUnhp = getRelativeComplement(mp, mqUnhp);
+        variable_node *mqRCmpUnhq = getRelativeComplement(mq, mpUnhq);
 
         if (mpRCmqUnhp != NULL && mqRCmpUnhq != NULL) {
             return true;
@@ -260,18 +198,18 @@ int isIU(struct variable_node *mp, struct variable_node *mq, struct variable_nod
     return false;
 }
 
-int isGIU(struct variable_node *mp, struct variable_node *mq, struct variable_node *nhp, struct variable_node *nhq) {
-    struct variable_node *mpImq = getIntersection(mp, mq);
+int isGIU(variable_node *mp, variable_node *mq, variable_node *nhp, variable_node *nhq) {
+    variable_node *mpImq = getIntersection(mp, mq);
 
     if(mpImq != NULL) {
-        struct variable_node *mpImqInhp = getIntersection(mpImq, nhp);
+        variable_node *mpImqInhp = getIntersection(mpImq, nhp);
 
         if(mpImqInhp == NULL) {
-            struct variable_node *mqUnhp = getUnion(mq, nhp);
-            struct variable_node *mpUnhq = getUnion(mp, nhq);
+            variable_node *mqUnhp = getUnion(mq, nhp);
+            variable_node *mpUnhq = getUnion(mp, nhq);
 
-            struct variable_node *mpRCmqUnhp = getRelativeComplement(mp, mqUnhp);
-            struct variable_node *mqRCmpUnhq = getRelativeComplement(mq, mpUnhq);
+            variable_node *mpRCmqUnhp = getRelativeComplement(mp, mqUnhp);
+            variable_node *mqRCmpUnhq = getRelativeComplement(mq, mpUnhq);
 
             if (mpRCmqUnhp == NULL && mqRCmpUnhq == NULL) {
                 return true;
@@ -282,15 +220,15 @@ int isGIU(struct variable_node *mp, struct variable_node *mq, struct variable_no
     return false;
 }
 
-int isUU(struct variable_node *mp, struct variable_node *mq, struct variable_node *nhp, struct variable_node *nhq) {
-    struct variable_node *mpImq = getIntersection(mp, mq);
+int isUU(variable_node *mp, variable_node *mq, variable_node *nhp, variable_node *nhq) {
+    variable_node *mpImq = getIntersection(mp, mq);
 
     if(mpImq != NULL) {
-        struct variable_node *mqUnhp = getUnion(mq, nhp);
-        struct variable_node *mpUnhq = getUnion(mp, nhq);
+        variable_node *mqUnhp = getUnion(mq, nhp);
+        variable_node *mpUnhq = getUnion(mp, nhq);
 
-        struct variable_node *mpRCmqUnhp = getRelativeComplement(mp, mqUnhp);
-        struct variable_node *mqRCmpUnhq = getRelativeComplement(mq, mpUnhq);
+        variable_node *mpRCmqUnhp = getRelativeComplement(mp, mqUnhp);
+        variable_node *mqRCmpUnhq = getRelativeComplement(mq, mpUnhq);
 
         if (mpRCmqUnhp == NULL || mqRCmpUnhq == NULL) {
             return true;
@@ -300,7 +238,7 @@ int isUU(struct variable_node *mp, struct variable_node *mq, struct variable_nod
     return false;
 }
 
-int getDependency(struct variable_node *l, struct variable_node *r, struct variable_node *help_l, struct variable_node *help_r) {
+int getDependency(variable_node *l, variable_node *r, variable_node *help_l, variable_node *help_r) {
     if(isGU(l, r, help_l, help_r)){
         return GU;
     } else if (isUU(l, r, help_l, help_r)) {
@@ -316,23 +254,23 @@ int getDependency(struct variable_node *l, struct variable_node *r, struct varia
     return 0;
 }
 
-struct variable_node *getIntersection(struct variable_node *left, struct variable_node *right) {
+variable_node *getIntersection(variable_node *left, variable_node *right) {
 
-    struct variable_node *_start_node = NULL;
-    struct variable_node *_current_node = NULL;
+    variable_node *_start_node = NULL;
+    variable_node *_current_node = NULL;
 
-    struct variable_node *tmp_right = right;
+    variable_node *tmp_right = right;
     while(left != NULL) {
         while(tmp_right != NULL) {
             if (strcmp(left->name, right->name) == 0) {
-                _current_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+                _current_node = (variable_node *)(malloc(sizeof(variable_node)));
 
                 if(_start_node == NULL) {
                     _start_node = _current_node;
                 }
                 strncpy(_current_node->name, left->name, 64);
                 if (left->next != NULL && tmp_right->next != NULL) {
-                    _current_node->next = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+                    _current_node->next = (variable_node *)(malloc(sizeof(variable_node)));
                     _current_node = _current_node->next;
                 }
             }
@@ -346,16 +284,16 @@ struct variable_node *getIntersection(struct variable_node *left, struct variabl
 
 }
 
-struct variable_node *getUnion(struct variable_node *left, struct variable_node *right) {
-    struct variable_node *_start_node = NULL;
-    struct variable_node *_current_node = NULL;
+variable_node *getUnion(variable_node *left, variable_node *right) {
+    variable_node *_start_node = NULL;
+    variable_node *_current_node = NULL;
 
     while(left != NULL) {
         if (_current_node != NULL) {
-            _current_node->next = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+            _current_node->next = (variable_node *)(malloc(sizeof(variable_node)));
             _current_node = _current_node->next;
         } else {
-            _current_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+            _current_node = (variable_node *)(malloc(sizeof(variable_node)));
             _start_node = _current_node;
         }
 
@@ -367,10 +305,10 @@ struct variable_node *getUnion(struct variable_node *left, struct variable_node 
 
     while(right != NULL) {
         if (_current_node != NULL) {
-            _current_node->next = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+            _current_node->next = (variable_node *)(malloc(sizeof(variable_node)));
             _current_node = _current_node->next;
         } else {
-            _current_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+            _current_node = (variable_node *)(malloc(sizeof(variable_node)));
             _start_node = _current_node;
         }
 
@@ -383,8 +321,8 @@ struct variable_node *getUnion(struct variable_node *left, struct variable_node 
     _current_node = _start_node;
 
     while(_current_node != NULL) {
-        struct variable_node *tmp_node = _current_node->next;
-        struct variable_node *last_tmp_node = _current_node;
+        variable_node *tmp_node = _current_node->next;
+        variable_node *last_tmp_node = _current_node;
 
         while(tmp_node != NULL) {
             if(strcmp(_current_node->name, tmp_node->name) == 0){
@@ -400,16 +338,16 @@ struct variable_node *getUnion(struct variable_node *left, struct variable_node 
     return _start_node;
 }
 
-struct variable_node *getRelativeComplement(struct variable_node *in, struct variable_node *of) {
-    struct variable_node *_start_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
-    struct variable_node *_current_node = _start_node;
-    struct variable_node *of_start_node = of;
+variable_node *getRelativeComplement(variable_node *in, variable_node *of) {
+    variable_node *_start_node = (variable_node *)(malloc(sizeof(variable_node)));
+    variable_node *_current_node = _start_node;
+    variable_node *of_start_node = of;
 
     while(in != NULL) {
         while(of != NULL) {
             if(strcmp(in->name, of->name) != 0) {
                 strncpy(_current_node->name, in->name, 64);
-                _current_node->next = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+                _current_node->next = (variable_node *)(malloc(sizeof(variable_node)));
                 _current_node = _current_node->next;
             }
             of = of->next;
@@ -421,17 +359,17 @@ struct variable_node *getRelativeComplement(struct variable_node *in, struct var
     return _start_node;
 }
 
-struct variable_node *getHelpers(struct literal_node *start_literal, struct literal_node *current_literal) {
-    struct variable_node *_start_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
-    struct variable_node *_current_node = _start_node;
+variable_node *getHelpers(literal_node *start_literal, literal_node *current_literal) {
+    variable_node *_start_node = (variable_node *)(malloc(sizeof(variable_node)));
+    variable_node *_current_node = _start_node;
 
-    struct variable_node *literal_tmp_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+    variable_node *literal_tmp_node = (variable_node *)(malloc(sizeof(variable_node)));
     literal_tmp_node = current_literal->first_var;
 
     while(literal_tmp_node != NULL) {
         strncpy(_current_node->name, literal_tmp_node->name, 64);
         if(literal_tmp_node->next != NULL) {
-            _current_node->next = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+            _current_node->next = (variable_node *)(malloc(sizeof(variable_node)));
             _current_node = _current_node->next;
         } else {
             _current_node->next = NULL;
@@ -442,11 +380,11 @@ struct variable_node *getHelpers(struct literal_node *start_literal, struct lite
     _current_node = _start_node;
 
     while(start_literal != current_literal) {
-        struct variable_node *current_var_node = (struct variable_node *)(malloc(sizeof(struct variable_node)));
+        variable_node *current_var_node = (variable_node *)(malloc(sizeof(variable_node)));
         current_var_node = start_literal->first_var;
 
         while(current_var_node != NULL) {
-            struct variable_node *previous = NULL;
+            variable_node *previous = NULL;
 
             while(_current_node != NULL) {
                 if(strcmp(current_var_node->name, _current_node->name) == 0) {
@@ -473,19 +411,21 @@ struct variable_node *getHelpers(struct literal_node *start_literal, struct lite
     return _start_node;
 }
 
-struct entry *newEntry(char typ) {
-    struct entry *_entry = (struct entry *)(malloc(sizeof(struct entry)));
+entry *newEntry(char typ) {
+    entry *_entry = (entry *)(malloc(sizeof(entry)));
     _entry->typ = typ;
     _entry->nr = ++g_index;
     _entry->left = NULL;
     _entry->right = NULL;
 
     if (printList == NULL) {
-        printList = (struct print_node*)(malloc(sizeof(struct print_node)));
+        printList = (print_node*)(malloc(sizeof(print_node)));
         printList->entry = _entry;
         startprintList = printList;
+        prevprintList = NULL;
     } else {
-        printList->next = (struct print_node*)(malloc(sizeof(struct print_node)));
+        prevprintList = printList;
+        printList->next = (print_node*)(malloc(sizeof(print_node)));
         printList = printList->next;
         printList->entry = _entry;
     }
@@ -493,13 +433,13 @@ struct entry *newEntry(char typ) {
     return _entry;
 }
 
-void attach(char *side, struct entry *entryNode, struct entry *attacher, int port) {
+void attach(char *side, entry *entryNode, entry *attacher, int port) {
     if (strcmp(side, "right") == 0) {
-        entryNode->right = (struct output *)(malloc(sizeof(struct output)));
+        entryNode->right = (output *)(malloc(sizeof(output)));
         entryNode->right->entry = attacher;
         entryNode->right->port = port;
     } else if (strcmp(side, "left") == 0) {
-        entryNode->left = (struct output *)(malloc(sizeof(struct output)));
+        entryNode->left = (output *)(malloc(sizeof(output)));
         entryNode->left->entry = attacher;
         entryNode->left->port = port;
     }
@@ -508,39 +448,42 @@ void attach(char *side, struct entry *entryNode, struct entry *attacher, int por
 void createTable() {
 
     printf("CreateTable();\n");
-    struct literal_node *current_literal = start_node->next;
+    literal_node *current_literal = start_node->next;
 
     // Create E node
-    struct entry *eNode = newEntry('E');
+    entry *eNode = newEntry('E');
 
-    struct entry *cNode = newEntry('C');
-    attach("left", eNode, cNode, 1);
+    //entry *cNode = newEntry('C');
+    //attach("right", eNode, cNode, 1);
 
     int index = 0;
-    struct literal_node *prev_literal = NULL;
-    struct entry *prev_e = eNode;
+    literal_node *prev_literal = NULL;
+    entry *prev_e = eNode;
+    entry *cNode = NULL;
 
     while(current_literal != NULL) {
-        struct entry *uNode = newEntry('U');
-        struct entry *last_e;
+        entry *uNode = newEntry('U');
+        entry *prev_a;
 
         // TODO: uNode->info
         if (index == 0) {
-            attach("right", cNode, uNode, 1);
+            attach("right", eNode, uNode, 1);
 
-            struct entry *aNode = newEntry('A');
-            attach("right", uNode, aNode, 1);
+            entry *aNode = newEntry('A');
+            attach("left", uNode, aNode, 1);
 
-            struct entry *ccNode = newEntry('C');
-            attach("right", aNode, ccNode, 1);
-
-            last_e = ccNode;
+            prev_a = aNode;
 
         } else {
-            attach("left", cNode, uNode, 1);
+            if (index == 1) {
+                cNode = newEntry('C');
+                reIndex(1);
+            }
 
-            struct variable_node *help_l = getHelpers(start_node, prev_literal);
-            struct variable_node *help_r = getHelpers(start_node, current_literal);
+            //attach("right", cNode, uNode, 1);
+
+            variable_node *help_l = getHelpers(start_node, prev_literal);
+            variable_node *help_r = getHelpers(start_node, current_literal);
 
             int dep = getDependency(prev_literal->first_var, current_literal->first_var, help_l, help_r);
 
@@ -548,20 +491,20 @@ void createTable() {
                 case UA:
                     break;
                 case GU:
-                    1+2;
-                    struct entry *tmp_node_u = newEntry('U');
-                    struct entry *tmp_node_g = newEntry('G');
+                    (void)0;
+                    entry *tmp_node_u = newEntry('U');
+                    entry *tmp_node_g = newEntry('G');
 
-                    attach("right", tmp_node_g, tmp_node_u, 2);
-                    attach("right", uNode, tmp_node_g, 1);
-                    attach("left", last_e, tmp_node_u, 1);
+                    attach("left", tmp_node_g, tmp_node_u, 2);
+                    attach("left", uNode, tmp_node_g, 1);
+                    attach("right", prev_a, tmp_node_u, 1);
 
-                    struct entry *tmp_node_a = newEntry('A');
+                    entry *tmp_node_a = newEntry('A');
 
-                    attach("right", tmp_node_u, tmp_node_a, 1);
-                    attach("left", tmp_node_g, tmp_node_a, 1);
+                    attach("left", tmp_node_u, tmp_node_a, 1);
+                    attach("right", tmp_node_g, tmp_node_a, 1);
 
-                    last_e = tmp_node_a;
+                    prev_a = tmp_node_a;
 
                     printf("isGU\n");
                     break;
@@ -576,10 +519,10 @@ void createTable() {
             }
         }
 
-        struct entry *connectionNode = newEntry('U');
+        entry *connectionNode = newEntry('U');
 
-        attach("right", prev_e, connectionNode, 2);
-        attach("right", last_e, connectionNode, 1);
+        attach("left", prev_e, connectionNode, 2);
+        attach("left", prev_a, connectionNode, 1);
 
         prev_e = connectionNode;
 
@@ -589,20 +532,20 @@ void createTable() {
         index++;
     }
 
-    struct entry *rNode = newEntry('R');
-    attach("right", prev_e, rNode, 1);
+    entry *rNode = newEntry('R');
+    attach("left", prev_e, rNode, 1);
 
     printTable();
 
 }
 
 void printTable() {
-    printf("<Nr>\t<Typ>\t(<RNr> <RPort>)\t(<LNr> <LPort>)\tInfo\n");
+    printf("<Nr>\t<Typ>\t(<LNr> <LPort>)\t(<RNr> <RPort>)\tInfo\n");
     printList = startprintList;
     while(printList != NULL) {
-        struct entry *start = printList->entry;
-        struct output *right = start->right ? start->right : (struct output *)(malloc(sizeof(struct output)));
-        struct output *left = start->left ? start->left : (struct output *)(malloc(sizeof(struct output)));
+        entry *start = printList->entry;
+        output *right = start->right ? start->right : (output *)(malloc(sizeof(output)));
+        output *left = start->left ? start->left : (output *)(malloc(sizeof(output)));
 
         int nr = start->nr;
         char typ = start->typ;
@@ -620,10 +563,46 @@ void printTable() {
 
         char info[512] = "tbd.";
 
-        printf("%d\t%c\t(%s, %s)\t\t(%s, %s)\t\t%s\n", nr, typ, rnr, rport, lnr, lport, info);
+        printf("%d\t%c\t(%s, %s)\t\t(%s, %s)\t\t%s\n", nr, typ, lnr, lport, rnr, rport, info);
 
         printList = printList->next;
     }
+}
+
+void reIndex(int prev_index) {
+    print_node *tempList = startprintList;
+
+    while(tempList->entry->nr != prev_index) {
+        tempList = tempList->next;
+    }
+
+    print_node *tmpNext = tempList->next;
+
+    printList->entry->nr = prev_index + 1;
+    printf("print list entry: %c, %d\n", printList->entry->typ, printList->entry->nr);
+    printf("tempList->entry: %c, %d\n", tempList->entry->typ, tempList->entry->nr);
+    printf("tempList->entry->left->entry: %c, %d\n", tempList->entry->left->entry->typ, tempList->entry->left->entry->nr);
+    printf("tempList->entry->right->entry: %c, %d\n", tempList->entry->right->entry->typ, tempList->entry->right->entry->nr);
+    attach("right", printList->entry, tempList->entry->right->entry, 1);
+    attach("right", tempList->entry, printList->entry, 1);
+
+
+    tempList->next = printList;
+
+    printList->next = tmpNext;
+
+    printList = prevprintList;
+    prevprintList->next = NULL;
+
+    tempList = tmpNext;
+
+    while(tempList != NULL){
+        tempList->entry->nr += 1;
+        tempList = tempList->next;
+    }
+
+    //printTable();
+    //printf("\n\n\n");
 }
 
 void itoa(int n, char s[])
