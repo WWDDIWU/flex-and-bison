@@ -25,5 +25,6 @@ void attach(char*, entry*, entry*, int);
 void printTable();
 void itoa(int n, char s[]);
 void reverse(char s[]);
-void reIndex(int prev_index, int);
+void reIndex(int, int);
 int isInSet(variable_node *, variable_node *);
+void setInfoVar(entry *, variable_node *);

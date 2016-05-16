@@ -172,10 +172,31 @@ void setInfo(entry *eNode, literal_node *info_node) {
     strncpy(eNode->info, info, 512);
 }
 
+void setInfoVar(entry *eNode, variable_node *var_node) {
+    char *info = (char *)malloc(512 * sizeof(char));
+    strncpy(info, "[", 1);
+
+    variable_node *var = var_node;
+    int flag = 0;
+    while(var != NULL) {
+        printf("%s\n", var->name);
+        if (flag == 0) {
+            strncat(info, var->name, 64);
+            flag = 1;
+        } else {
+            strncat(info, ",", 1);
+            strncat(info, var->name, 64);
+        }
+        var = var->next;
+    }
+    strncat(info, "]", 1);
+
+    strncpy(eNode->info, info, 512);
+}
+
 
 int isUA(variable_node *nhp, variable_node *mq) {
-    if (getIntersection(nhp, mq) != NULL) return true;
-    else return false;
+    return (getIntersection(nhp, mq) != NULL);
 }
 
 int isGU(variable_node *mp, variable_node *mq, variable_node *nhp, variable_node *nhq) {
@@ -194,6 +215,7 @@ int isGU(variable_node *mp, variable_node *mq, variable_node *nhp, variable_node
             if (mpRCmqUnhp != NULL || mqRCmpUnhq != NULL) {
                 return true;
             }
+            return true;
         }
     }
 
@@ -271,7 +293,7 @@ int getDependency(variable_node *l, variable_node *r, variable_node *help_l, var
         return IU;
     }
 
-    return 0;
+    return -1;
 }
 
 variable_node *getIntersection(variable_node *left, variable_node *right) {
@@ -551,7 +573,10 @@ void createTable() {
                 case GU: {
 
                     entry *tmp_node_u = newEntry('U');
+
                     entry *tmp_node_g = newEntry('G');
+                    variable_node *mpImq = getIntersection(prev_literal->first_var, current_literal->first_var);
+                    setInfoVar(tmp_node_g, mpImq);
 
                     attach("left", tmp_node_g, tmp_node_u, 2);
                     attach("left", uNode, tmp_node_g, 1);
@@ -573,6 +598,9 @@ void createTable() {
                     entry *tmp_node_u = newEntry('U');
                     entry *tmp_node_i = newEntry('I');
 
+                    variable_node *mpImq = getUnion(prev_literal->first_var, current_literal->first_var);
+                    setInfoVar(tmp_node_i, mpImq);
+
                     attach("left", tmp_node_i, tmp_node_u, 2);
                     attach("left", uNode, tmp_node_i, 1);
                     attach("right", prev_a, tmp_node_u, 1);
@@ -592,6 +620,11 @@ void createTable() {
                     entry *tmp_node_u = newEntry('U');
                     entry *tmp_node_g = newEntry('G');
                     entry *tmp_node_i = newEntry('I');
+
+                    variable_node *mpImq = getIntersection(prev_literal->first_var, current_literal->first_var);
+                    setInfoVar(tmp_node_g, mpImq);
+                    variable_node *ivar = getRelativeComplement(getUnion(prev_literal->first_var, current_literal->first_var), mpImq);
+                    setInfoVar(tmp_node_i, ivar);
 
                     attach("left", tmp_node_g, tmp_node_u, 2);
                     attach("right", tmp_node_g, tmp_node_i, 1);
