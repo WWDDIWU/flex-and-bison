@@ -179,7 +179,6 @@ void setInfoVar(entry *eNode, variable_node *var_node) {
     variable_node *var = var_node;
     int flag = 0;
     while(var != NULL) {
-        printf("%s\n", var->name);
         if (flag == 0) {
             strncat(info, var->name, 64);
             flag = 1;
@@ -488,9 +487,22 @@ entry *newEntry(char typ) {
 void attach(char *side, entry *entryNode, entry *attacher, int port) {
     if (strcmp(side, "right") == 0) {
         if (attacher != NULL) {
-            entryNode->right = (output *)(malloc(sizeof(output)));
-            entryNode->right->entry = attacher;
-            entryNode->right->port = port;
+            if (entryNode->typ == 'C' && entryNode->right != NULL) {
+                output *right = entryNode->right;
+                output *prev_right = NULL;
+                while(right != NULL) {
+                    prev_right = right;
+                    right = right->next;
+                }
+                prev_right->next = (output *)(malloc(sizeof(output)));
+                prev_right->next->entry = attacher;
+                prev_right->next->port = port;
+            } else {
+                entryNode->right = (output *)(malloc(sizeof(output)));
+                entryNode->right->entry = attacher;
+                entryNode->right->port = port;
+            }
+
         } else {
             entryNode->right = NULL;
         }
@@ -712,9 +724,22 @@ void printTable() {
         right->entry ? itoa(right->port, rport) : strcpy(rport, " ");
         left->entry ? itoa(left->port, lport) : strcpy(lport, " ");
 
-        char info[512] = "tbd.";
 
-        printf("%d\t%c\t(%s, %s)\t\t(%s, %s)\t\t%s\n", nr, typ, lnr, lport, rnr, rport, start->info);
+        char info[512] = "\0";
+        if (typ == 'C') {
+            output *right_output = right->next;
+            while(right_output != NULL) {
+                char rrnr[64], rrport[64];
+                itoa(right_output->entry->nr, rrnr);
+                itoa(right_output->port, rrport);
+
+                sprintf(info, "(%s, %s) ", rrnr, rrport);
+                right_output = right_output->next;
+            }
+        } else {
+            strncpy(info, start->info, 512);
+        }
+        printf("%d\t%c\t(%s, %s)\t\t(%s, %s)\t\t%s\n", nr, typ, lnr, lport, rnr, rport, info);
 
         printList = printList->next;
     }
@@ -732,7 +757,6 @@ void reIndex(int prev_index, int case_) {
 
     // Take the element after the found index
     print_node *tmpNext = tempList->next;
-    printf("templist next: %c, %d\n", tempList->next->entry->typ, tempList->next->entry->nr);
 
 
     // Set new inserted element's index to prev_index + 1

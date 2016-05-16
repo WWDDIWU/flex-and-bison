@@ -36,6 +36,7 @@ struct print_node{
 };
 
 struct output{
+    struct output *next;
     struct entry *entry;
     int port;
 };
