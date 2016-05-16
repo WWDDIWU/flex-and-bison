@@ -149,13 +149,33 @@ void addVariable(char *name) {
     }
 }
 
-void setInfo(char *info) {
-    strncpy(current_node->info, info, 512);
+void setInfo(entry *eNode, literal_node *info_node) {
+    char *info = (char *)malloc(512 * sizeof(char));
+
+    strncpy(info, info_node->name, 512);
+    strncat(info, "(", 1);
+
+    variable_node *var = info_node->first_var;
+    int flag = 0;
+    while(var != NULL) {
+        if (flag == 0) {
+            strncat(info, var->name, 64);
+            flag = 1;
+        } else {
+            strncat(info, ",", 1);
+            strncat(info, var->name, 64);
+        }
+        var = var->next;
+    }
+    strncat(info, ")", 1);
+
+    strncpy(eNode->info, info, 512);
 }
 
 
 int isUA(variable_node *nhp, variable_node *mq) {
-    return (strcmp(getIntersection(nhp, mq)->name, "") == 1);
+    if (getIntersection(nhp, mq) != NULL) return true;
+    else return false;
 }
 
 int isGU(variable_node *mp, variable_node *mq, variable_node *nhp, variable_node *nhq) {
@@ -211,7 +231,7 @@ int isGIU(variable_node *mp, variable_node *mq, variable_node *nhp, variable_nod
             variable_node *mpRCmqUnhp = getRelativeComplement(mp, mqUnhp);
             variable_node *mqRCmpUnhq = getRelativeComplement(mq, mpUnhq);
 
-            if (mpRCmqUnhp == NULL && mqRCmpUnhq == NULL) {
+            if (mpRCmqUnhp != NULL && mqRCmpUnhq != NULL) {
                 return true;
             }
         }
@@ -223,7 +243,7 @@ int isGIU(variable_node *mp, variable_node *mq, variable_node *nhp, variable_nod
 int isUU(variable_node *mp, variable_node *mq, variable_node *nhp, variable_node *nhq) {
     variable_node *mpImq = getIntersection(mp, mq);
 
-    if(mpImq != NULL) {
+    if(mpImq == NULL) {
         variable_node *mqUnhp = getUnion(mq, nhp);
         variable_node *mpUnhq = getUnion(mp, nhq);
 
@@ -239,16 +259,16 @@ int isUU(variable_node *mp, variable_node *mq, variable_node *nhp, variable_node
 }
 
 int getDependency(variable_node *l, variable_node *r, variable_node *help_l, variable_node *help_r) {
-    if(isGU(l, r, help_l, help_r)){
-        return GU;
-    } else if (isUU(l, r, help_l, help_r)) {
-        return UU;
-    } else if (isGIU(l, r, help_l, help_r)) {
+    if (isGIU(l, r, help_l, help_r)) {
         return GIU;
-    } else if (isIU(l, r, help_l, help_r)) {
-        return IU;
+    }  else if (isUU(l, r, help_l, help_r)) {
+        return UU;
+    } else if(isGU(l, r, help_l, help_r)){
+        return GU;
     } else if (isUA(help_l, r)) {
         return UA;
+    } else if (isIU(l, r, help_l, help_r)) {
+        return IU;
     }
 
     return 0;
@@ -262,17 +282,16 @@ variable_node *getIntersection(variable_node *left, variable_node *right) {
     variable_node *tmp_right = right;
     while(left != NULL) {
         while(tmp_right != NULL) {
-            if (strcmp(left->name, right->name) == 0) {
-                _current_node = (variable_node *)(malloc(sizeof(variable_node)));
+            if (strcmp(left->name, tmp_right->name) == 0) {
 
-                if(_start_node == NULL) {
+                if (_current_node == NULL) {
+                    _current_node = (variable_node *)(malloc(sizeof(variable_node)));
                     _start_node = _current_node;
-                }
-                strncpy(_current_node->name, left->name, 64);
-                if (left->next != NULL && tmp_right->next != NULL) {
+                } else {
                     _current_node->next = (variable_node *)(malloc(sizeof(variable_node)));
                     _current_node = _current_node->next;
                 }
+                strncpy(_current_node->name, left->name, 64);
             }
             tmp_right = tmp_right->next;
         }
@@ -338,25 +357,36 @@ variable_node *getUnion(variable_node *left, variable_node *right) {
     return _start_node;
 }
 
-variable_node *getRelativeComplement(variable_node *in, variable_node *of) {
-    variable_node *_start_node = (variable_node *)(malloc(sizeof(variable_node)));
-    variable_node *_current_node = _start_node;
-    variable_node *of_start_node = of;
+variable_node *getRelativeComplement(variable_node *left, variable_node *right) {
+    variable_node *ret_node = NULL;
+    variable_node *cur_ret_node = NULL;
 
-    while(in != NULL) {
-        while(of != NULL) {
-            if(strcmp(in->name, of->name) != 0) {
-                strncpy(_current_node->name, in->name, 64);
-                _current_node->next = (variable_node *)(malloc(sizeof(variable_node)));
-                _current_node = _current_node->next;
+    while(left != NULL) {
+        if(!isInSet(left, right)) {
+            if(cur_ret_node == NULL) {
+                cur_ret_node = (variable_node *)(malloc(sizeof(variable_node)));
+                ret_node = cur_ret_node;
+            } else {
+                cur_ret_node->next = (variable_node *)(malloc(sizeof(variable_node)));
+                cur_ret_node = cur_ret_node->next;
             }
-            of = of->next;
+            strncpy(cur_ret_node->name, left->name, 64);
         }
-        of = of_start_node;
-        in = in->next;
-    }
 
-    return _start_node;
+        left = left->next;
+    }
+    return ret_node;
+}
+
+int isInSet(variable_node *var, variable_node *set) {
+    int ret = false;
+    while(set != NULL) {
+        if (strcmp(set->name, var->name) == 0) {
+            ret = true;
+        }
+        set = set->next;
+    }
+    return ret;
 }
 
 variable_node *getHelpers(literal_node *start_literal, literal_node *current_literal) {
@@ -435,24 +465,31 @@ entry *newEntry(char typ) {
 
 void attach(char *side, entry *entryNode, entry *attacher, int port) {
     if (strcmp(side, "right") == 0) {
-        entryNode->right = (output *)(malloc(sizeof(output)));
-        entryNode->right->entry = attacher;
-        entryNode->right->port = port;
+        if (attacher != NULL) {
+            entryNode->right = (output *)(malloc(sizeof(output)));
+            entryNode->right->entry = attacher;
+            entryNode->right->port = port;
+        } else {
+            entryNode->right = NULL;
+        }
     } else if (strcmp(side, "left") == 0) {
-        entryNode->left = (output *)(malloc(sizeof(output)));
-        entryNode->left->entry = attacher;
-        entryNode->left->port = port;
+        if (attacher != NULL) {
+            entryNode->left = (output *)(malloc(sizeof(output)));
+            entryNode->left->entry = attacher;
+            entryNode->left->port = port;
+        } else {
+            entryNode->left = NULL;
+        }
     }
 }
 
 void createTable() {
 
-    printf("CreateTable();\n");
     literal_node *current_literal = start_node->next;
 
     // Create E node
     entry *eNode = newEntry('E');
-
+    setInfo(eNode, start_node);
     //entry *cNode = newEntry('C');
     //attach("right", eNode, cNode, 1);
 
@@ -463,7 +500,10 @@ void createTable() {
 
     while(current_literal != NULL) {
         entry *uNode = newEntry('U');
+        setInfo(uNode, current_literal);
         entry *prev_a;
+        entry *first_a;
+        entry *prev_u;
 
         // TODO: uNode->info
         if (index == 0) {
@@ -472,26 +512,44 @@ void createTable() {
             entry *aNode = newEntry('A');
             attach("left", uNode, aNode, 1);
 
+            first_a = aNode;
             prev_a = aNode;
 
         } else {
+
             if (index == 1) {
                 cNode = newEntry('C');
-                reIndex(1);
+                reIndex(1, 0);
             }
 
-            //attach("right", cNode, uNode, 1);
+            attach("right", cNode, uNode, 1);
 
             variable_node *help_l = getHelpers(start_node, prev_literal);
             variable_node *help_r = getHelpers(start_node, current_literal);
 
             int dep = getDependency(prev_literal->first_var, current_literal->first_var, help_l, help_r);
 
+            entry *rndx_node = NULL;
+
             switch(dep) {
-                case UA:
+                case UA: {
+                    printf("isUA\n");
+                    entry *tmp_node_u = newEntry('U');
+
+                    attach("left", uNode, tmp_node_u, 1);
+                    attach("right", prev_a, tmp_node_u, 1);
+
+                    entry *tmp_node_a = newEntry('A');
+
+                    attach("left", tmp_node_u, tmp_node_a, 1);
+
+                    prev_a = tmp_node_a;
+                    prev_u = tmp_node_u;
+
                     break;
-                case GU:
-                    (void)0;
+                }
+                case GU: {
+
                     entry *tmp_node_u = newEntry('U');
                     entry *tmp_node_g = newEntry('G');
 
@@ -505,18 +563,78 @@ void createTable() {
                     attach("right", tmp_node_g, tmp_node_a, 1);
 
                     prev_a = tmp_node_a;
+                    prev_u = tmp_node_u;
 
                     printf("isGU\n");
                     break;
-                case IU:
+                }
+                case IU: {
+
+                    entry *tmp_node_u = newEntry('U');
+                    entry *tmp_node_i = newEntry('I');
+
+                    attach("left", tmp_node_i, tmp_node_u, 2);
+                    attach("left", uNode, tmp_node_i, 1);
+                    attach("right", prev_a, tmp_node_u, 1);
+
+                    entry *tmp_node_a = newEntry('A');
+
+                    attach("left", tmp_node_u, tmp_node_a, 1);
+                    attach("right", tmp_node_i, tmp_node_a, 1);
+
+                    prev_a = tmp_node_a;
+                    prev_u = tmp_node_u;
+
+                    printf("isIU\n");
                     break;
-                case GIU:
+                }
+                case GIU: {
+                    entry *tmp_node_u = newEntry('U');
+                    entry *tmp_node_g = newEntry('G');
+                    entry *tmp_node_i = newEntry('I');
+
+                    attach("left", tmp_node_g, tmp_node_u, 2);
+                    attach("right", tmp_node_g, tmp_node_i, 1);
+
+                    attach("left", tmp_node_i, tmp_node_u, 2);
+
+                    attach("left", uNode, tmp_node_g, 1);
+                    attach("right", prev_a, tmp_node_u, 1);
+
+                    entry *tmp_node_a = newEntry('A');
+
+                    attach("left", tmp_node_u, tmp_node_a, 1);
+                    attach("right", tmp_node_i, tmp_node_a, 1);
+
+                    prev_a = tmp_node_a;
+                    prev_u = tmp_node_u;
+
+                    printf("isGIU\n");
                     break;
-                case UU:
+                }
+                case UU: {
+                    entry *tmp_node_a = newEntry('A');
+
+                    attach("left", uNode, tmp_node_a, 1);
+
+                    prev_a = tmp_node_a;
+                    prev_u = prev_e;
+
+                    printf("isUU\n");
                     break;
+                }
                 default:
+                    printf("Independence Test unsuccessful.\n");
                     break;
             }
+
+            entry *tmp_c_node = newEntry('C');
+            attach("right", tmp_c_node, prev_u, 1);
+            attach("left", tmp_c_node, prev_e, 1);
+
+            reIndex(first_a->nr, 1);
+
+            first_a = prev_a;
         }
 
         entry *connectionNode = newEntry('U');
@@ -563,46 +681,61 @@ void printTable() {
 
         char info[512] = "tbd.";
 
-        printf("%d\t%c\t(%s, %s)\t\t(%s, %s)\t\t%s\n", nr, typ, lnr, lport, rnr, rport, info);
+        printf("%d\t%c\t(%s, %s)\t\t(%s, %s)\t\t%s\n", nr, typ, lnr, lport, rnr, rport, start->info);
 
         printList = printList->next;
     }
 }
 
-void reIndex(int prev_index) {
+void reIndex(int prev_index, int case_) {
+    // First element in printlinst
     print_node *tempList = startprintList;
 
+    // Go through printlist until the index of the element
+    // from where the reindex must start is found
     while(tempList->entry->nr != prev_index) {
         tempList = tempList->next;
     }
 
+    // Take the element after the found index
     print_node *tmpNext = tempList->next;
+    printf("templist next: %c, %d\n", tempList->next->entry->typ, tempList->next->entry->nr);
 
+
+    // Set new inserted element's index to prev_index + 1
     printList->entry->nr = prev_index + 1;
-    printf("print list entry: %c, %d\n", printList->entry->typ, printList->entry->nr);
-    printf("tempList->entry: %c, %d\n", tempList->entry->typ, tempList->entry->nr);
-    printf("tempList->entry->left->entry: %c, %d\n", tempList->entry->left->entry->typ, tempList->entry->left->entry->nr);
-    printf("tempList->entry->right->entry: %c, %d\n", tempList->entry->right->entry->typ, tempList->entry->right->entry->nr);
-    attach("right", printList->entry, tempList->entry->right->entry, 1);
-    attach("right", tempList->entry, printList->entry, 1);
+
+    if (case_ == 0) {
+        // Set the left output of the newest entry to be the former entry of
+        // the found elements right entry
+        attach("left", printList->entry, tempList->entry->right->entry, 1);
+        // Set the found elements right entry to be the newest entry
+        attach("right", tempList->entry, printList->entry, 1);
+    } else if (case_ == 1) {
+        // Set the right output of the found item to be the newest one
+        attach("left", tempList->entry, printList->entry, 1);
+        attach("right", tempList->entry, NULL, 1);
+    }
 
 
+    // Set the element after the found to be the new inserted index
     tempList->next = printList;
-
+    // Set the next of the inserted element to be the former next
     printList->next = tmpNext;
 
+    // Set the newest element to be the previously added element
     printList = prevprintList;
+    // Set the next of this element to point at nothing (previously pointed at templist->next)
     prevprintList->next = NULL;
 
+    // Reset the templist pointer back to the element after the found one
     tempList = tmpNext;
 
+    // Iterate through the list and increment the index
     while(tempList != NULL){
         tempList->entry->nr += 1;
         tempList = tempList->next;
     }
-
-    //printTable();
-    //printf("\n\n\n");
 }
 
 void itoa(int n, char s[])
