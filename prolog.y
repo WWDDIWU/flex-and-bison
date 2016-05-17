@@ -733,7 +733,7 @@ void printTable() {
                 itoa(right_output->entry->nr, rrnr);
                 itoa(right_output->port, rrport);
 
-                sprintf(info, "(%s, %s) ", rrnr, rrport);
+                sprintf(info, "%s (%s, %s)", info, rrnr, rrport);
                 right_output = right_output->next;
             }
         } else {
