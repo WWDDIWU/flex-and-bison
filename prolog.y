@@ -533,13 +533,15 @@ void createTable() {
     entry *cNode = NULL;
 
     while(current_literal != NULL) {
+
+        literal_node *tmp_literal = start_node->next;
+
         entry *uNode = newEntry('U');
         setInfo(uNode, current_literal);
         entry *prev_a;
         entry *first_a;
         entry *prev_u;
 
-        // TODO: uNode->info
         if (index == 0) {
             attach("right", eNode, uNode, 1);
 
@@ -550,7 +552,6 @@ void createTable() {
             prev_a = aNode;
 
         } else {
-
             if (index == 1) {
                 cNode = newEntry('C');
                 reIndex(1, 0);
@@ -558,119 +559,126 @@ void createTable() {
 
             attach("right", cNode, uNode, 1);
 
-            variable_node *help_l = getHelpers(start_node, prev_literal);
-            variable_node *help_r = getHelpers(start_node, current_literal);
+            while (tmp_literal != current_literal) {
 
-            int dep = getDependency(prev_literal->first_var, current_literal->first_var, help_l, help_r);
+                variable_node *help_l = getHelpers(start_node, tmp_literal);
+                variable_node *help_r = getHelpers(start_node, tmp_literal);
 
-            entry *rndx_node = NULL;
+                int dep = getDependency(tmp_literal->first_var, current_literal->first_var, help_l, help_r);
 
-            switch(dep) {
-                case UA: {
-                    printf("isUA\n");
-                    entry *tmp_node_u = newEntry('U');
+                entry *rndx_node = NULL;
 
-                    attach("left", uNode, tmp_node_u, 1);
-                    attach("right", prev_a, tmp_node_u, 1);
+                switch(dep) {
+                    case UA: {
+                        printf("isUA\n");
+                        entry *tmp_node_u = newEntry('U');
 
-                    entry *tmp_node_a = newEntry('A');
+                        attach("left", uNode, tmp_node_u, 1);
+                        attach("right", prev_a, tmp_node_u, 1);
+                        if(tmp_literal->next == current_literal) {
+                            entry *tmp_node_a = newEntry('A');
+                            attach("left", tmp_node_u, tmp_node_a, 1);
+                            prev_a = tmp_node_a;
+                        }
 
-                    attach("left", tmp_node_u, tmp_node_a, 1);
+                        prev_u = tmp_node_u;
 
-                    prev_a = tmp_node_a;
-                    prev_u = tmp_node_u;
+                        break;
+                    }
+                    case GU: {
 
-                    break;
+                        entry *tmp_node_u = newEntry('U');
+
+                        entry *tmp_node_g = newEntry('G');
+                        variable_node *mpImq = getIntersection(tmp_literal->first_var, current_literal->first_var);
+                        setInfoVar(tmp_node_g, mpImq);
+
+                        attach("left", tmp_node_g, tmp_node_u, 2);
+                        attach("left", uNode, tmp_node_g, 1);
+                        attach("right", prev_a, tmp_node_u, 1);
+                        if(tmp_literal->next == current_literal) {
+                            entry *tmp_node_a = newEntry('A');
+
+                            attach("left", tmp_node_u, tmp_node_a, 1);
+                            attach("right", tmp_node_g, tmp_node_a, 1);
+
+                            prev_a = tmp_node_a;
+                        }
+                        prev_u = tmp_node_u;
+
+                        printf("isGU\n");
+                        break;
+                    }
+                    case IU: {
+
+                        entry *tmp_node_u = newEntry('U');
+                        entry *tmp_node_i = newEntry('I');
+
+                        variable_node *mpImq = getUnion(tmp_literal->first_var, current_literal->first_var);
+                        setInfoVar(tmp_node_i, mpImq);
+
+                        attach("left", tmp_node_i, tmp_node_u, 2);
+                        attach("left", uNode, tmp_node_i, 1);
+                        attach("right", prev_a, tmp_node_u, 1);
+                        if(tmp_literal->next == current_literal) {
+                            entry *tmp_node_a = newEntry('A');
+
+                            attach("left", tmp_node_u, tmp_node_a, 1);
+                            attach("right", tmp_node_i, tmp_node_a, 1);
+
+                            prev_a = tmp_node_a;
+                        }
+                        prev_u = tmp_node_u;
+
+                        printf("isIU\n");
+                        break;
+                    }
+                    case GIU: {
+                        entry *tmp_node_u = newEntry('U');
+                        entry *tmp_node_g = newEntry('G');
+                        entry *tmp_node_i = newEntry('I');
+
+                        variable_node *mpImq = getIntersection(tmp_literal->first_var, current_literal->first_var);
+                        setInfoVar(tmp_node_g, mpImq);
+                        variable_node *ivar = getRelativeComplement(getUnion(tmp_literal->first_var, current_literal->first_var), mpImq);
+                        setInfoVar(tmp_node_i, ivar);
+
+                        attach("left", tmp_node_g, tmp_node_u, 2);
+                        attach("right", tmp_node_g, tmp_node_i, 1);
+
+                        attach("left", tmp_node_i, tmp_node_u, 2);
+
+                        attach("left", uNode, tmp_node_g, 1);
+                        attach("right", prev_a, tmp_node_u, 1);
+                        if(tmp_literal->next == current_literal) {
+                            entry *tmp_node_a = newEntry('A');
+
+                            attach("left", tmp_node_u, tmp_node_a, 1);
+                            attach("right", tmp_node_i, tmp_node_a, 1);
+
+                            prev_a = tmp_node_a;
+                        }
+                        prev_u = tmp_node_u;
+
+                        printf("isGIU\n");
+                        break;
+                    }
+                    case UU: {
+                        entry *tmp_node_a = newEntry('A');
+                        if(tmp_literal->next == current_literal) {
+                            attach("left", uNode, tmp_node_a, 1);
+                            prev_a = tmp_node_a;
+                        }
+                        prev_u = prev_e;
+
+                        printf("isUU\n");
+                        break;
+                    }
+                    default:
+                        printf("Independence Test unsuccessful.\n");
+                        break;
                 }
-                case GU: {
-
-                    entry *tmp_node_u = newEntry('U');
-
-                    entry *tmp_node_g = newEntry('G');
-                    variable_node *mpImq = getIntersection(prev_literal->first_var, current_literal->first_var);
-                    setInfoVar(tmp_node_g, mpImq);
-
-                    attach("left", tmp_node_g, tmp_node_u, 2);
-                    attach("left", uNode, tmp_node_g, 1);
-                    attach("right", prev_a, tmp_node_u, 1);
-
-                    entry *tmp_node_a = newEntry('A');
-
-                    attach("left", tmp_node_u, tmp_node_a, 1);
-                    attach("right", tmp_node_g, tmp_node_a, 1);
-
-                    prev_a = tmp_node_a;
-                    prev_u = tmp_node_u;
-
-                    printf("isGU\n");
-                    break;
-                }
-                case IU: {
-
-                    entry *tmp_node_u = newEntry('U');
-                    entry *tmp_node_i = newEntry('I');
-
-                    variable_node *mpImq = getUnion(prev_literal->first_var, current_literal->first_var);
-                    setInfoVar(tmp_node_i, mpImq);
-
-                    attach("left", tmp_node_i, tmp_node_u, 2);
-                    attach("left", uNode, tmp_node_i, 1);
-                    attach("right", prev_a, tmp_node_u, 1);
-
-                    entry *tmp_node_a = newEntry('A');
-
-                    attach("left", tmp_node_u, tmp_node_a, 1);
-                    attach("right", tmp_node_i, tmp_node_a, 1);
-
-                    prev_a = tmp_node_a;
-                    prev_u = tmp_node_u;
-
-                    printf("isIU\n");
-                    break;
-                }
-                case GIU: {
-                    entry *tmp_node_u = newEntry('U');
-                    entry *tmp_node_g = newEntry('G');
-                    entry *tmp_node_i = newEntry('I');
-
-                    variable_node *mpImq = getIntersection(prev_literal->first_var, current_literal->first_var);
-                    setInfoVar(tmp_node_g, mpImq);
-                    variable_node *ivar = getRelativeComplement(getUnion(prev_literal->first_var, current_literal->first_var), mpImq);
-                    setInfoVar(tmp_node_i, ivar);
-
-                    attach("left", tmp_node_g, tmp_node_u, 2);
-                    attach("right", tmp_node_g, tmp_node_i, 1);
-
-                    attach("left", tmp_node_i, tmp_node_u, 2);
-
-                    attach("left", uNode, tmp_node_g, 1);
-                    attach("right", prev_a, tmp_node_u, 1);
-
-                    entry *tmp_node_a = newEntry('A');
-
-                    attach("left", tmp_node_u, tmp_node_a, 1);
-                    attach("right", tmp_node_i, tmp_node_a, 1);
-
-                    prev_a = tmp_node_a;
-                    prev_u = tmp_node_u;
-
-                    printf("isGIU\n");
-                    break;
-                }
-                case UU: {
-                    entry *tmp_node_a = newEntry('A');
-
-                    attach("left", uNode, tmp_node_a, 1);
-
-                    prev_a = tmp_node_a;
-                    prev_u = prev_e;
-
-                    printf("isUU\n");
-                    break;
-                }
-                default:
-                    printf("Independence Test unsuccessful.\n");
-                    break;
+                tmp_literal = tmp_literal->next;
             }
 
             entry *tmp_c_node = newEntry('C');
